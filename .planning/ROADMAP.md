@@ -78,7 +78,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation | 1/3 | In Progress|  |
+| 1. Foundation | 2/3 | In Progress|  |
 | 2. Record and Play | 0/? | Not started | - |
 | 3. Visual Block Editor | 0/? | Not started | - |
 | 4. Flow Control and Window Management | 0/? | Not started | - |

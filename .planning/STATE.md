@@ -10,9 +10,9 @@ See: .planning/PROJECT.md (updated 2026-02-25)
 ## Current Position
 
 Phase: 1 of 4 (Foundation)
-Plan: 1 of 4 in current phase
+Plan: 2 of 4 in current phase
 Status: In Progress
-Last activity: 2026-02-26 — Plan 01-01 complete (package scaffold + CLAUDE.md)
+Last activity: 2026-02-26 — Plan 01-02 complete (ActionBlock data model and JSON serializer)
 
 Progress: [█░░░░░░░░░] 6%
 
@@ -34,6 +34,7 @@ Progress: [█░░░░░░░░░] 6%
 - Trend: -
 
 *Updated after each plan completion*
+| Phase 01-foundation P02 | 8 | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -48,6 +49,7 @@ Recent decisions affecting current work:
 - Timing: Playback uses absolute `time.perf_counter()` targets, not per-event sleep, to avoid scheduler drift
 - Data model: MacroDocument.blocks is always a flat list — grouping is view-layer only, not stored structure
 - [Phase 01-foundation]: PyQtDarkTheme-fork moved to optional dependency (Python 3.14 incompatible); QPalette fallback required
+- [Phase 01-foundation]: type field uses field(default=..., init=False) so block_from_dict strips it before dispatch; block_from_dict raises KeyError for unknown types
 
 ### Pending Todos
 
@@ -62,5 +64,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-26
-Stopped at: Completed 01-01-PLAN.md — package scaffold and CLAUDE.md
-Resume file: .planning/phases/01-foundation/01-01-SUMMARY.md
+Stopped at: Completed 01-02-PLAN.md — ActionBlock data model and JSON serializer
+Resume file: .planning/phases/01-foundation/01-02-SUMMARY.md
