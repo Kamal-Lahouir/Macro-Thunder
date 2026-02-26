@@ -28,7 +28,12 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. Mouse coordinates reported by the app match the operating system's screen coordinates at 125%, 150%, and 200% display scaling
   3. MacroDocument can represent all eight action block types (MouseMove, MouseClick, MouseScroll, KeyPress, Delay, WindowFocus, Label, Goto) in its data model
   4. A macro saved to JSON round-trips to an identical MacroDocument on load, and every saved file contains a `version` field
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+- [ ] 01-01-PLAN.md — Project scaffold: pyproject.toml, src-layout package skeleton, CLAUDE.md rules
+- [ ] 01-02-PLAN.md — Data model and JSON serializer (TDD): all 8 ActionBlock types, MacroDocument, save/load
+- [ ] 01-03-PLAN.md — App shell: DPI-aware entry point, dark-themed main window with 3-panel layout and live coordinate readout
 
 ### Phase 2: Record and Play
 **Goal**: Users can record mouse and keyboard input, save the result, and play it back with accurate timing — the first end-to-end working macro
