@@ -10,27 +10,27 @@ See: .planning/PROJECT.md (updated 2026-02-25)
 ## Current Position
 
 Phase: 1 of 4 (Foundation)
-Plan: 0 of ? in current phase
-Status: Ready to plan
-Last activity: 2026-02-25 — Roadmap created
+Plan: 1 of 4 in current phase
+Status: In Progress
+Last activity: 2026-02-26 — Plan 01-01 complete (package scaffold + CLAUDE.md)
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [█░░░░░░░░░] 6%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 0
-- Average duration: -
-- Total execution time: 0 hours
+- Total plans completed: 1
+- Average duration: 3 min
+- Total execution time: 0.05 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| - | - | - | - |
+| 01-foundation | 1/4 | 3 min | 3 min |
 
 **Recent Trend:**
-- Last 5 plans: -
+- Last 5 plans: 3 min
 - Trend: -
 
 *Updated after each plan completion*
@@ -47,6 +47,7 @@ Recent decisions affecting current work:
 - Threading: pynput callbacks must never touch Qt objects — queue.Queue + QTimer drain pattern exclusively
 - Timing: Playback uses absolute `time.perf_counter()` targets, not per-event sleep, to avoid scheduler drift
 - Data model: MacroDocument.blocks is always a flat list — grouping is view-layer only, not stored structure
+- [Phase 01-foundation]: PyQtDarkTheme-fork moved to optional dependency (Python 3.14 incompatible); QPalette fallback required
 
 ### Pending Todos
 
@@ -60,6 +61,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-02-25
-Stopped at: Roadmap created, no plans exist yet
-Resume file: None
+Last session: 2026-02-26
+Stopped at: Completed 01-01-PLAN.md — package scaffold and CLAUDE.md
+Resume file: .planning/phases/01-foundation/01-01-SUMMARY.md

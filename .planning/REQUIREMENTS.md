@@ -7,10 +7,10 @@
 
 ### Foundation
 
-- [ ] **FOUND-01**: Application sets DPI awareness before any UI or input library initializes (prevents coordinate mismatch on scaled displays)
-- [ ] **FOUND-02**: Macro data model supports all action block types: MouseMove, MouseClick, MouseScroll, KeyPress, Delay, WindowFocus, Label, Goto
-- [ ] **FOUND-03**: Macro files saved and loaded as JSON with a `version` field from the first save
-- [ ] **FOUND-04**: Application launches with a dark-themed main window
+- [x] **FOUND-01**: Application sets DPI awareness before any UI or input library initializes (prevents coordinate mismatch on scaled displays)
+- [x] **FOUND-02**: Macro data model supports all action block types: MouseMove, MouseClick, MouseScroll, KeyPress, Delay, WindowFocus, Label, Goto
+- [x] **FOUND-03**: Macro files saved and loaded as JSON with a `version` field from the first save
+- [x] **FOUND-04**: Application launches with a dark-themed main window
 
 ### Recording
 
@@ -111,10 +111,10 @@ Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| FOUND-01 | Phase 1 | Pending |
-| FOUND-02 | Phase 1 | Pending |
-| FOUND-03 | Phase 1 | Pending |
-| FOUND-04 | Phase 1 | Pending |
+| FOUND-01 | Phase 1 | Complete |
+| FOUND-02 | Phase 1 | Complete |
+| FOUND-03 | Phase 1 | Complete |
+| FOUND-04 | Phase 1 | Complete |
 | REC-01 | Phase 2 | Pending |
 | REC-02 | Phase 2 | Pending |
 | REC-03 | Phase 2 | Pending |
