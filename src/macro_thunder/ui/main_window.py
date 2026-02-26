@@ -1,7 +1,7 @@
 from PyQt6.QtWidgets import (
     QMainWindow, QSplitter, QLabel, QToolBar,
 )
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtGui import QCursor
 
 from macro_thunder.ui.library_panel import LibraryPanel
@@ -31,21 +31,20 @@ class MainWindow(QMainWindow):
         self._splitter.setStretchFactor(0, 0)
         self._splitter.setStretchFactor(1, 1)
 
-        # Enable mouse tracking on splitter and panels so move events propagate
-        self._splitter.setMouseTracking(True)
-        self._library_panel.setMouseTracking(True)
-        self._editor_panel.setMouseTracking(True)
-
         self.setCentralWidget(self._splitter)
 
         # Status bar with live coordinate readout
         self._coord_label = QLabel("X: 0  Y: 0")
         self.statusBar().addPermanentWidget(self._coord_label)
 
-        # Enable mouse tracking on main window
-        self.setMouseTracking(True)
+        # Poll QCursor.pos() at ~60 Hz so coordinates update regardless of which
+        # child widget currently has the mouse — mouseMoveEvent on QMainWindow
+        # does not fire when a child widget handles the event first.
+        self._coord_timer = QTimer(self)
+        self._coord_timer.setInterval(16)  # ~60 Hz
+        self._coord_timer.timeout.connect(self._update_coords)
+        self._coord_timer.start()
 
-    def mouseMoveEvent(self, event):
+    def _update_coords(self) -> None:
         pos = QCursor.pos()  # screen-absolute, DPI-correct
         self._coord_label.setText(f"X: {pos.x()}  Y: {pos.y()}")
-        super().mouseMoveEvent(event)

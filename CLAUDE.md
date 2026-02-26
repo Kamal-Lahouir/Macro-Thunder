@@ -2,12 +2,12 @@
 
 ## Critical: DPI Awareness
 
-`ctypes.windll.shcore.SetProcessDpiAwareness(2)` MUST be the first two executable lines
-of `src/macro_thunder/__main__.py` — before ANY import that transitively imports PyQt6.
+Do NOT call `SetProcessDpiAwareness` manually in `__main__.py`. Qt6 sets
+`DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2` automatically before user code runs.
+Calling it manually causes: "SetProcessDpiAwarenessContext() failed: Access is denied."
 
-If this call appears after any Qt import, mouse coordinates at 125%+ display scaling
-will be wrong (divided by the scale factor). This is NOT a test concern — it's a
-runtime correctness issue that only manifests at non-100% display scaling.
+Qt6 DPI handling is correct out of the box. `QCursor.pos()` returns proper
+screen-absolute coordinates at any display scaling (100%, 125%, 150%, 200%).
 
 ## Package Name Warning
 

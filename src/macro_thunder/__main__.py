@@ -1,11 +1,6 @@
 # src/macro_thunder/__main__.py
-# IMPORTANT: DPI awareness MUST be set before any other import
-import ctypes
-try:
-    ctypes.windll.shcore.SetProcessDpiAwareness(2)
-except (AttributeError, OSError):
-    pass  # Non-Windows or already set via manifest
-
+# NOTE: Qt6 sets DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2 automatically before
+# user code runs. Do NOT call SetProcessDpiAwareness manually — Qt6 rejects it.
 import sys
 from PyQt6.QtWidgets import QApplication
 from macro_thunder.ui.main_window import MainWindow
