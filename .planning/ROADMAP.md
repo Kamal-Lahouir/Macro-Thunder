@@ -12,7 +12,7 @@ Four phases, each delivering a coherent and independently verifiable capability.
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Foundation** - App shell, data model, DPI awareness, and correct threading architecture
+- [x] **Phase 1: Foundation** - App shell, data model, DPI awareness, and correct threading architecture (completed 2026-02-26)
 - [ ] **Phase 2: Record and Play** - Full recording pipeline and playback engine — first end-to-end working macro
 - [ ] **Phase 3: Visual Block Editor** - QAbstractTableModel block editor with movement grouping and group duration editing
 - [ ] **Phase 4: Flow Control and Window Management** - Label/Goto flow control and Window Focus action with interactive window picker
@@ -78,7 +78,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation | 2/3 | In Progress|  |
+| 1. Foundation | 3/3 | Complete   | 2026-02-26 |
 | 2. Record and Play | 0/? | Not started | - |
 | 3. Visual Block Editor | 0/? | Not started | - |
 | 4. Flow Control and Window Management | 0/? | Not started | - |

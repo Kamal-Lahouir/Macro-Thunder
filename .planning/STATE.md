@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-25)
 ## Current Position
 
 Phase: 1 of 4 (Foundation)
-Plan: 2 of 4 in current phase
+Plan: 3 of 4 in current phase
 Status: In Progress
-Last activity: 2026-02-26 — Plan 01-02 complete (ActionBlock data model and JSON serializer)
+Last activity: 2026-02-26 — Plan 01-03 complete (Main window shell with dark theme and coordinate display)
 
-Progress: [█░░░░░░░░░] 6%
+Progress: [██░░░░░░░░] 12%
 
 ## Performance Metrics
 
@@ -50,6 +50,8 @@ Recent decisions affecting current work:
 - Data model: MacroDocument.blocks is always a flat list — grouping is view-layer only, not stored structure
 - [Phase 01-foundation]: PyQtDarkTheme-fork moved to optional dependency (Python 3.14 incompatible); QPalette fallback required
 - [Phase 01-foundation]: type field uses field(default=..., init=False) so block_from_dict strips it before dispatch; block_from_dict raises KeyError for unknown types
+- [Phase 01-foundation 01-03]: Qt6 sets DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2 automatically — do NOT call SetProcessDpiAwareness manually
+- [Phase 01-foundation 01-03]: Use QTimer polling QCursor.pos() at ~60 Hz for coordinate display — mouseMoveEvent on QMainWindow does not fire over child widgets
 
 ### Pending Todos
 
@@ -64,5 +66,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-26
-Stopped at: Completed 01-02-PLAN.md — ActionBlock data model and JSON serializer
-Resume file: .planning/phases/01-foundation/01-02-SUMMARY.md
+Stopped at: Completed 01-03-PLAN.md — Main window shell with dark theme and coordinate display
+Resume file: .planning/phases/01-foundation/01-03-SUMMARY.md
