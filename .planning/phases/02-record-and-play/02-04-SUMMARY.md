@@ -58,7 +58,7 @@ completed: 2026-02-28
 - **Duration:** ~8 min
 - **Started:** 2026-02-28T00:00:00Z
 - **Completed:** 2026-02-28
-- **Tasks:** 2 of 2 auto tasks complete (checkpoint:human-verify pending user approval)
+- **Tasks:** 2 of 2 auto tasks complete (checkpoint:human-verify APPROVED — all 9 steps passed)
 - **Files modified:** 3
 
 ## Accomplishments
@@ -112,8 +112,9 @@ completed: 2026-02-28
 None beyond the two auto-fixed deviations above.
 
 ## Next Phase Readiness
-- Full record-play loop awaiting human verification (checkpoint:human-verify)
-- Phase 3 (block editor) can proceed once checkpoint approved
+- Full record-play loop verified by user (all 9 checkpoint steps passed)
+- Phase 3 (block editor) can proceed; MacroDocument.blocks flat list is stable
+- Phase 3 note: QAbstractTableModel with variable-height rows warrants research before coding
 
 ---
 *Phase: 02-record-and-play*
