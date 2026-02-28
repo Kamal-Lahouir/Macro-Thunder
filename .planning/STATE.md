@@ -38,6 +38,7 @@ Progress: [████░░░░░░] 40%
 | Phase 02-record-and-play P02 | 2 | 1 tasks | 2 files |
 | Phase 02-record-and-play P03 | 92s | 2 tasks | 3 files |
 | Phase 02-record-and-play P01 | 2 min | 1 task | 2 files |
+| Phase 02-record-and-play P04 | 8 | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -59,6 +60,7 @@ Recent decisions affecting current work:
 - [Phase 02-record-and-play 02-03]: Speed repeat count fixed at 1 for Phase 2; PLAY-03 repeat UI deferred to toolbar iteration
 - [Phase 02-record-and-play 02-03]: HotkeyManager lambdas capture queue alias (q) not self, preventing accidental Qt access from thread
 - [Phase 02-record-and-play 02-01]: Last-position for threshold check only updates when event is queued — distance is measured from last accepted position, not last seen position
+- [Phase 02-record-and-play]: QAction must come from PyQt6.QtGui, not PyQt6.QtWidgets (moved in Qt6)
 
 ### Pending Todos
 
