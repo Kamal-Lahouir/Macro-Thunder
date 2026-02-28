@@ -14,7 +14,7 @@
 
 ### Recording
 
-- [ ] **REC-01**: User can start and stop recording via a button (and hotkey)
+- [x] **REC-01**: User can start and stop recording via a button (and hotkey)
 - [ ] **REC-02**: Mouse movements are captured with exact screen coordinates and timestamps
 - [ ] **REC-03**: Mouse clicks (left, right, middle — down and up) are recorded
 - [ ] **REC-04**: Mouse scroll events are recorded (direction and amount)
@@ -24,11 +24,11 @@
 
 ### Playback
 
-- [ ] **PLAY-01**: User can play a macro from start to finish with accurate timing (perf_counter-based, not sleep-based)
-- [ ] **PLAY-02**: User can set a playback speed multiplier (e.g. 0.5x, 1x, 2x) before running
-- [ ] **PLAY-03**: User can set repeat count (run macro N times)
-- [ ] **PLAY-04**: User can stop playback at any time via a global hotkey (works even when another app has focus)
-- [ ] **PLAY-05**: Playback runs on a background thread and does not freeze the UI
+- [x] **PLAY-01**: User can play a macro from start to finish with accurate timing (perf_counter-based, not sleep-based)
+- [x] **PLAY-02**: User can set a playback speed multiplier (e.g. 0.5x, 1x, 2x) before running
+- [x] **PLAY-03**: User can set repeat count (run macro N times)
+- [x] **PLAY-04**: User can stop playback at any time via a global hotkey (works even when another app has focus)
+- [x] **PLAY-05**: Playback runs on a background thread and does not freeze the UI
 
 ### Editor — Block List
 
@@ -115,18 +115,18 @@ Updated during roadmap creation.
 | FOUND-02 | Phase 1 | Complete |
 | FOUND-03 | Phase 1 | Complete |
 | FOUND-04 | Phase 1 | Complete |
-| REC-01 | Phase 2 | Pending |
+| REC-01 | Phase 2 | Complete |
 | REC-02 | Phase 2 | Pending |
 | REC-03 | Phase 2 | Pending |
 | REC-04 | Phase 2 | Pending |
 | REC-05 | Phase 2 | Pending |
 | REC-06 | Phase 2 | Pending |
 | REC-07 | Phase 2 | Pending |
-| PLAY-01 | Phase 2 | Pending |
-| PLAY-02 | Phase 2 | Pending |
-| PLAY-03 | Phase 2 | Pending |
-| PLAY-04 | Phase 2 | Pending |
-| PLAY-05 | Phase 2 | Pending |
+| PLAY-01 | Phase 2 | Complete |
+| PLAY-02 | Phase 2 | Complete |
+| PLAY-03 | Phase 2 | Complete |
+| PLAY-04 | Phase 2 | Complete |
+| PLAY-05 | Phase 2 | Complete |
 | EDIT-01 | Phase 3 | Pending |
 | EDIT-02 | Phase 3 | Pending |
 | EDIT-03 | Phase 3 | Pending |

@@ -37,6 +37,7 @@ Progress: [████░░░░░░] 40%
 | Phase 01-foundation P02 | 8 | 2 tasks | 4 files |
 | Phase 02-record-and-play P02 | 2 | 1 tasks | 2 files |
 | Phase 02-record-and-play P03 | 92s | 2 tasks | 3 files |
+| Phase 02-record-and-play P01 | 2 min | 1 task | 2 files |
 
 ## Accumulated Context
 
