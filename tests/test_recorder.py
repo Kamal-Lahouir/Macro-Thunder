@@ -193,11 +193,12 @@ class TestKeyToStr:
         assert self.svc._key_to_str(keyboard.KeyCode.from_char('z')) == "z"
 
     def test_unknown_key_falls_back_to_str(self):
-        mock_key = MagicMock(spec=[])  # no .char attribute
-        mock_key.__str__ = lambda self: "unknown_key"
-        # Should not raise; returns str(key)
-        result = self.svc._key_to_str(mock_key)
-        assert isinstance(result, str)
+        class _UnknownKey:
+            def __str__(self):
+                return "unknown_key"
+        # No .char attribute, not a keyboard.Key → str(key) path
+        result = self.svc._key_to_str(_UnknownKey())
+        assert result == "unknown_key"
 
 
 class TestInjectedEventFilters:

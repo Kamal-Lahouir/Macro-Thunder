@@ -1,0 +1,159 @@
+"""RecorderService — pynput-based input capture pipeline.
+
+No Qt imports. Uses queue.Queue + callback pattern exclusively.
+Caller is responsible for draining the queue (QTimer in UI layer).
+"""
+from __future__ import annotations
+
+import math
+import queue
+import time
+from typing import Optional
+
+from pynput import keyboard, mouse
+
+from macro_thunder.models.blocks import (
+    KeyPressBlock,
+    MouseClickBlock,
+    MouseMoveBlock,
+    MouseScrollBlock,
+)
+
+
+class RecorderService:
+    """Captures mouse and keyboard events and puts ActionBlock instances into a queue.
+
+    Parameters
+    ----------
+    event_queue:
+        Caller-supplied queue.Queue. Blocks are put() from pynput listener threads.
+    pixel_threshold:
+        Minimum pixel distance (Euclidean) between consecutive mouse-move events.
+        Moves smaller than this value are discarded. Default: 3.
+    """
+
+    def __init__(self, event_queue: queue.Queue, pixel_threshold: int = 3) -> None:
+        self._queue = event_queue
+        self._threshold = pixel_threshold
+        self._record_start: float = 0.0
+        self._last_move_x: Optional[int] = None
+        self._last_move_y: Optional[int] = None
+        self._mouse_listener: Optional[mouse.Listener] = None
+        self._kb_listener: Optional[keyboard.Listener] = None
+
+    # ------------------------------------------------------------------
+    # Public API
+    # ------------------------------------------------------------------
+
+    def start(self, record_start_time: Optional[float] = None) -> None:
+        """Begin capturing input events.
+
+        Parameters
+        ----------
+        record_start_time:
+            Override the recording start time (float from time.perf_counter()).
+            If None, uses the current time.
+        """
+        self._record_start = record_start_time if record_start_time is not None else time.perf_counter()
+        self._last_move_x = None
+        self._last_move_y = None
+
+        self._mouse_listener = mouse.Listener(
+            on_move=self._on_move,
+            on_click=self._on_click,
+            on_scroll=self._on_scroll,
+            win32_event_filter=self._mouse_filter,
+        )
+        self._kb_listener = keyboard.Listener(
+            on_press=self._on_press,
+            on_release=self._on_release,
+            win32_event_filter=self._kb_filter,
+        )
+        self._mouse_listener.start()
+        self._kb_listener.start()
+
+    def stop(self) -> None:
+        """Stop capturing. Safe to call multiple times or before start()."""
+        if self._mouse_listener is not None:
+            try:
+                self._mouse_listener.stop()
+            except Exception:
+                pass
+            self._mouse_listener = None
+
+        if self._kb_listener is not None:
+            try:
+                self._kb_listener.stop()
+            except Exception:
+                pass
+            self._kb_listener = None
+
+    # ------------------------------------------------------------------
+    # Internal callbacks — MUST NOT touch Qt objects
+    # ------------------------------------------------------------------
+
+    def _on_move(self, x: int, y: int) -> None:
+        ts = time.perf_counter() - self._record_start
+        if self._last_move_x is None:
+            # First move — always queue and establish baseline
+            self._last_move_x = x
+            self._last_move_y = y
+            self._queue.put(MouseMoveBlock(x=x, y=y, timestamp=ts))
+            return
+
+        dist = math.hypot(x - self._last_move_x, y - self._last_move_y)
+        if dist < self._threshold:
+            return  # discard sub-threshold move; do NOT update last position
+
+        self._last_move_x = x
+        self._last_move_y = y
+        self._queue.put(MouseMoveBlock(x=x, y=y, timestamp=ts))
+
+    def _on_click(self, x: int, y: int, button: mouse.Button, pressed: bool) -> None:
+        ts = time.perf_counter() - self._record_start
+        self._queue.put(
+            MouseClickBlock(
+                x=x,
+                y=y,
+                button=button.name,
+                direction="down" if pressed else "up",
+                timestamp=ts,
+            )
+        )
+
+    def _on_scroll(self, x: int, y: int, dx: int, dy: int) -> None:
+        ts = time.perf_counter() - self._record_start
+        self._queue.put(MouseScrollBlock(x=x, y=y, dx=dx, dy=dy, timestamp=ts))
+
+    def _on_press(self, key: keyboard.Key | keyboard.KeyCode) -> None:
+        ts = time.perf_counter() - self._record_start
+        self._queue.put(KeyPressBlock(key=self._key_to_str(key), direction="down", timestamp=ts))
+
+    def _on_release(self, key: keyboard.Key | keyboard.KeyCode) -> None:
+        ts = time.perf_counter() - self._record_start
+        self._queue.put(KeyPressBlock(key=self._key_to_str(key), direction="up", timestamp=ts))
+
+    # ------------------------------------------------------------------
+    # Helper utilities
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def _key_to_str(key: keyboard.Key | keyboard.KeyCode) -> str:
+        """Convert a pynput key object to a stable string representation."""
+        if isinstance(key, keyboard.Key):
+            return f"Key.{key.name}"
+        if hasattr(key, "char") and key.char:
+            return key.char
+        return str(key)
+
+    @staticmethod
+    def _mouse_filter(msg, data) -> bool:
+        """Return False to suppress injected mouse events (e.g. from playback)."""
+        LLMHF_INJECTED = 0x00000001
+        return not bool(data.flags & LLMHF_INJECTED)
+
+    @staticmethod
+    def _kb_filter(msg, data) -> bool:
+        """Return False to suppress injected keyboard events."""
+        LLKHF_INJECTED = 0x00000010  # bit 4
+        return not bool(data.flags & LLKHF_INJECTED)
