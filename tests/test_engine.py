@@ -113,11 +113,12 @@ class TestStop:
         original_dispatch = engine._dispatch
         def counting_dispatch(block):
             dispatch_count[0] += 1
+            time.sleep(0.002)  # 2ms per block so 300 blocks takes ~0.6s
             original_dispatch(block)
         engine._dispatch = counting_dispatch
 
         engine.start(blocks, speed=1.0, repeat=100)
-        time.sleep(0.05)
+        time.sleep(0.05)  # stop after ~25 dispatches
         engine.stop()
 
         # Retrieve the thread before it clears (engine keeps reference)
