@@ -58,6 +58,7 @@ Recent decisions affecting current work:
 - [Phase 02-record-and-play]: perf_counter + coarse-sleep + spin-wait pattern for playback timing precision without pure busy-wait
 - [Phase 02-record-and-play 02-03]: Speed repeat count fixed at 1 for Phase 2; PLAY-03 repeat UI deferred to toolbar iteration
 - [Phase 02-record-and-play 02-03]: HotkeyManager lambdas capture queue alias (q) not self, preventing accidental Qt access from thread
+- [Phase 02-record-and-play 02-01]: Last-position for threshold check only updates when event is queued — distance is measured from last accepted position, not last seen position
 
 ### Pending Todos
 
@@ -72,5 +73,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-28
-Stopped at: Completed 02-03-PLAN.md — Toolbar, HotkeyManager, AppSettings
-Resume file: .planning/phases/02-record-and-play/02-03-SUMMARY.md
+Stopped at: Completed 02-01-PLAN.md — RecorderService TDD
+Resume file: .planning/phases/02-record-and-play/02-01-SUMMARY.md

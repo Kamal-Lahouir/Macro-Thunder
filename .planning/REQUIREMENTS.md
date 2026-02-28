@@ -15,12 +15,12 @@
 ### Recording
 
 - [x] **REC-01**: User can start and stop recording via a button (and hotkey)
-- [ ] **REC-02**: Mouse movements are captured with exact screen coordinates and timestamps
-- [ ] **REC-03**: Mouse clicks (left, right, middle — down and up) are recorded
-- [ ] **REC-04**: Mouse scroll events are recorded (direction and amount)
-- [ ] **REC-05**: Keyboard key presses (down and up) are recorded
-- [ ] **REC-06**: User can configure a pixel threshold — mouse moves smaller than N pixels are discarded during recording
-- [ ] **REC-07**: Recording does not capture the macro application's own playback events (injected event filtering)
+- [x] **REC-02**: Mouse movements are captured with exact screen coordinates and timestamps
+- [x] **REC-03**: Mouse clicks (left, right, middle — down and up) are recorded
+- [x] **REC-04**: Mouse scroll events are recorded (direction and amount)
+- [x] **REC-05**: Keyboard key presses (down and up) are recorded
+- [x] **REC-06**: User can configure a pixel threshold — mouse moves smaller than N pixels are discarded during recording
+- [x] **REC-07**: Recording does not capture the macro application's own playback events (injected event filtering)
 
 ### Playback
 
@@ -116,12 +116,12 @@ Updated during roadmap creation.
 | FOUND-03 | Phase 1 | Complete |
 | FOUND-04 | Phase 1 | Complete |
 | REC-01 | Phase 2 | Complete |
-| REC-02 | Phase 2 | Pending |
-| REC-03 | Phase 2 | Pending |
-| REC-04 | Phase 2 | Pending |
-| REC-05 | Phase 2 | Pending |
-| REC-06 | Phase 2 | Pending |
-| REC-07 | Phase 2 | Pending |
+| REC-02 | Phase 2 | Complete |
+| REC-03 | Phase 2 | Complete |
+| REC-04 | Phase 2 | Complete |
+| REC-05 | Phase 2 | Complete |
+| REC-06 | Phase 2 | Complete |
+| REC-07 | Phase 2 | Complete |
 | PLAY-01 | Phase 2 | Complete |
 | PLAY-02 | Phase 2 | Complete |
 | PLAY-03 | Phase 2 | Complete |
