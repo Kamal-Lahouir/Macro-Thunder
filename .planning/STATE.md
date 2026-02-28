@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-25)
 
 **Core value:** Exact mouse movement replay with a non-painful editor — record once, tune the timing, loop it.
-**Current focus:** Phase 1 — Foundation
+**Current focus:** Phase 2 — Record and Play
 
 ## Current Position
 
-Phase: 1 of 4 (Foundation)
+Phase: 2 of 4 (Record and Play)
 Plan: 3 of 4 in current phase
 Status: In Progress
-Last activity: 2026-02-26 — Plan 01-03 complete (Main window shell with dark theme and coordinate display)
+Last activity: 2026-02-28 — Plan 02-03 complete (Toolbar, HotkeyManager, AppSettings)
 
-Progress: [██░░░░░░░░] 12%
+Progress: [████░░░░░░] 40%
 
 ## Performance Metrics
 
@@ -35,6 +35,8 @@ Progress: [██░░░░░░░░] 12%
 
 *Updated after each plan completion*
 | Phase 01-foundation P02 | 8 | 2 tasks | 4 files |
+| Phase 02-record-and-play P02 | 2 | 1 tasks | 2 files |
+| Phase 02-record-and-play P03 | 92s | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -52,6 +54,9 @@ Recent decisions affecting current work:
 - [Phase 01-foundation]: type field uses field(default=..., init=False) so block_from_dict strips it before dispatch; block_from_dict raises KeyError for unknown types
 - [Phase 01-foundation 01-03]: Qt6 sets DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2 automatically — do NOT call SetProcessDpiAwareness manually
 - [Phase 01-foundation 01-03]: Use QTimer polling QCursor.pos() at ~60 Hz for coordinate display — mouseMoveEvent on QMainWindow does not fire over child widgets
+- [Phase 02-record-and-play]: perf_counter + coarse-sleep + spin-wait pattern for playback timing precision without pure busy-wait
+- [Phase 02-record-and-play 02-03]: Speed repeat count fixed at 1 for Phase 2; PLAY-03 repeat UI deferred to toolbar iteration
+- [Phase 02-record-and-play 02-03]: HotkeyManager lambdas capture queue alias (q) not self, preventing accidental Qt access from thread
 
 ### Pending Todos
 
@@ -65,6 +70,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-02-26
-Stopped at: Completed 01-03-PLAN.md — Main window shell with dark theme and coordinate display
-Resume file: .planning/phases/01-foundation/01-03-SUMMARY.md
+Last session: 2026-02-28
+Stopped at: Completed 02-03-PLAN.md — Toolbar, HotkeyManager, AppSettings
+Resume file: .planning/phases/02-record-and-play/02-03-SUMMARY.md
