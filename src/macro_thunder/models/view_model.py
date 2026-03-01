@@ -444,9 +444,14 @@ if _QT_AVAILABLE:
             except (ValueError, AttributeError):
                 return False
 
-            self.beginResetModel()
-            self._rebuild_display_rows()
-            self.endResetModel()
+            # In-place value edit — display rows are structurally unchanged.
+            # Emit dataChanged (not beginResetModel) so the open editor is not
+            # destroyed, avoiding the "commitData called with editor that does
+            # not belong to this view" Qt warning.
+            self.dataChanged.emit(
+                self.index(index.row(), 0),
+                self.index(index.row(), _NUM_COLS - 1),
+            )
             self.document_modified.emit()
             return True
 
