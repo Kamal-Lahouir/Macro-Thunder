@@ -234,7 +234,7 @@ if _QT_AVAILABLE:
                 return None
             if role == Qt.ItemDataRole.UserRole:
                 return self._display_rows[index.row()]
-            if role != Qt.ItemDataRole.DisplayRole:
+            if role not in (Qt.ItemDataRole.DisplayRole, Qt.ItemDataRole.EditRole):
                 return None
             row_obj = self._display_rows[index.row()]
             col = index.column()
@@ -245,6 +245,10 @@ if _QT_AVAILABLE:
                 if col == COL_TYPE:
                     return block.type
                 if col == COL_VALUE:
+                    # EditRole: return raw numeric string for DelayBlock so the
+                    # inline editor pre-fills with a bare number, not "0.500s"
+                    if role == Qt.ItemDataRole.EditRole and isinstance(block, DelayBlock):
+                        return f"{block.duration:.3f}"
                     return _block_value(block)
                 if col == COL_TIMESTAMP:
                     return _block_timestamp(block)
@@ -597,7 +601,7 @@ def _set_block_value(block: ActionBlock, value: str) -> None:
     elif isinstance(block, KeyPressBlock):
         block.key = value
     elif isinstance(block, DelayBlock):
-        block.duration = float(value)
+        block.duration = float(value.rstrip("s").strip())
     elif isinstance(block, LabelBlock):
         block.name = value
     elif isinstance(block, GotoBlock):

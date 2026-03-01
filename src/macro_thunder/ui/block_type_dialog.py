@@ -5,6 +5,7 @@ default-constructed ActionBlock instance ready to be inserted into the document.
 """
 from __future__ import annotations
 
+import copy
 from typing import Optional
 
 from PyQt6.QtWidgets import (
@@ -65,7 +66,7 @@ class BlockTypeDialog(QDialog):
         if row < 0:
             row = 0
         _, block = _BLOCK_TYPES[row]
-        return block
+        return copy.copy(block)  # fresh instance so edits don't mutate the shared default
 
     @staticmethod
     def get_block(parent=None) -> Optional[ActionBlock]:
