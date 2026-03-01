@@ -34,6 +34,20 @@ def load(path: Path) -> MacroDocument:
     )
 
 
+def rename_macro(old_path: Path, new_name: str) -> Path:
+    """Rename macro file on disk and update doc.name inside the JSON.
+    Returns the new Path."""
+    old_path = Path(old_path)
+    new_path = old_path.parent / f"{new_name}.json"
+    # Update doc.name field inside JSON
+    data = json.loads(old_path.read_text(encoding="utf-8"))
+    data["name"] = new_name
+    new_path.write_text(json.dumps(data, indent=2), encoding="utf-8")
+    if new_path != old_path:
+        old_path.unlink()
+    return new_path
+
+
 def default_macro_dir() -> Path:
     """Returns ~/Documents/MacroThunder/, creating it if needed."""
     p = Path.home() / "Documents" / "MacroThunder"
