@@ -44,6 +44,7 @@ Progress: [███████░░░] 70%
 | Phase 03-visual-block-editor P01 | 3 min | 2 tasks | 2 files |
 | Phase 03-visual-block-editor P02 | 2 min | 2 tasks | 1 files |
 | Phase 03-visual-block-editor P03 | 4min | 2 tasks | 3 files |
+| Phase 03-visual-block-editor P05 | 5min | 1 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -74,6 +75,7 @@ Recent decisions affecting current work:
 - [Phase 03-visual-block-editor]: Expanded group state stored in Dict[int,bool] keyed on flat_start so it survives _rebuild_display_rows creating new GroupHeaderRow instances
 - [Phase 03-visual-block-editor]: BlockDelegate skips paint() override — arrows live in data() DisplayRole text; editorEvent-only approach keeps delegate lightweight
 - [Phase 03-visual-block-editor]: UserRole branch added to BlockTableModel.data() to expose DisplayRow objects to delegate without coupling
+- [Phase 03-visual-block-editor]: EditorPanel buttons disabled until load_document() called; clearSelection() before delete_rows for UI consistency
 
 ### Pending Todos
 
