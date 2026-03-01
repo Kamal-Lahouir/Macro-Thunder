@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-25)
 
 **Core value:** Exact mouse movement replay with a non-painful editor — record once, tune the timing, loop it.
-**Current focus:** Phase 2 — Record and Play
+**Current focus:** Phase 3 — Visual Block Editor
 
 ## Current Position
 
-Phase: 2 of 4 (Record and Play)
-Plan: 3 of 4 in current phase
+Phase: 3 of 4 (Visual Block Editor)
+Plan: 4 of 4 in current phase
 Status: In Progress
-Last activity: 2026-02-28 — Plan 02-03 complete (Toolbar, HotkeyManager, AppSettings)
+Last activity: 2026-03-01 — Plan 03-04 complete (LibraryPanel + rename_macro)
 
-Progress: [████░░░░░░] 40%
+Progress: [███████░░░] 70%
 
 ## Performance Metrics
 
@@ -40,6 +40,8 @@ Progress: [████░░░░░░] 40%
 | Phase 02-record-and-play P01 | 2 min | 1 task | 2 files |
 | Phase 02-record-and-play P04 | 8 | 2 tasks | 3 files |
 | Phase 02-record-and-play P04 | 15 | 2 tasks | 3 files |
+| Phase 03-visual-block-editor P04 | 3 min | 2 tasks | 2 files |
+| Phase 03-visual-block-editor P01 | 3 min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -64,6 +66,8 @@ Recent decisions affecting current work:
 - [Phase 02-record-and-play]: QAction must come from PyQt6.QtGui, not PyQt6.QtWidgets (moved in Qt6)
 - [Phase 02-record-and-play]: QAction must come from PyQt6.QtGui, not PyQt6.QtWidgets (moved in Qt6)
 - [Phase 02-record-and-play]: Play progress queue drained in existing 16ms coord timer — no third timer added
+- [Phase 03-04]: LibraryPanel emits signals to MainWindow for load/save separation of concerns
+- [Phase 03-01]: _rescale_group_coords single-move is a no-op — consistent with _rescale_group_duration no-op contract
 
 ### Pending Todos
 
@@ -77,6 +81,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-02-28
-Stopped at: Completed 02-01-PLAN.md — RecorderService TDD
-Resume file: .planning/phases/02-record-and-play/02-01-SUMMARY.md
+Last session: 2026-03-01
+Stopped at: Completed 03-04-PLAN.md — LibraryPanel + rename_macro
+Resume file: .planning/phases/03-visual-block-editor/03-04-SUMMARY.md

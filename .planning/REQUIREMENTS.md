@@ -63,9 +63,9 @@
 
 ### Macro Library
 
-- [ ] **LIB-01**: User can save a macro to a named file
-- [ ] **LIB-02**: User can open/load a saved macro
-- [ ] **LIB-03**: A macro library panel lists all saved macros in a designated folder
+- [x] **LIB-01**: User can save a macro to a named file
+- [x] **LIB-02**: User can open/load a saved macro
+- [x] **LIB-03**: A macro library panel lists all saved macros in a designated folder
 
 ## v2 Requirements
 
@@ -136,9 +136,9 @@ Updated during roadmap creation.
 | GROUP-02 | Phase 3 | Pending |
 | GROUP-03 | Phase 3 | Pending |
 | GROUP-04 | Phase 3 | Pending |
-| LIB-01 | Phase 3 | Pending |
-| LIB-02 | Phase 3 | Pending |
-| LIB-03 | Phase 3 | Pending |
+| LIB-01 | Phase 3 | Complete |
+| LIB-02 | Phase 3 | Complete |
+| LIB-03 | Phase 3 | Complete |
 | FLOW-01 | Phase 4 | Pending |
 | FLOW-02 | Phase 4 | Pending |
 | FLOW-03 | Phase 4 | Pending |
