@@ -32,18 +32,18 @@
 
 ### Editor — Block List
 
-- [ ] **EDIT-01**: Recorded macro is displayed as a list of action blocks in the editor
-- [ ] **EDIT-02**: User can delete one or multiple selected blocks
-- [ ] **EDIT-03**: User can reorder blocks via drag-and-drop or up/down controls
-- [ ] **EDIT-04**: User can multi-select blocks (click, shift-click, ctrl-click)
+- [x] **EDIT-01**: Recorded macro is displayed as a list of action blocks in the editor
+- [x] **EDIT-02**: User can delete one or multiple selected blocks
+- [x] **EDIT-03**: User can reorder blocks via drag-and-drop or up/down controls
+- [x] **EDIT-04**: User can multi-select blocks (click, shift-click, ctrl-click)
 - [ ] **EDIT-05**: User can manually insert a new action block at any position (from a block type menu)
 
 ### Editor — Movement Grouping
 
-- [ ] **GROUP-01**: Consecutive MouseMove blocks between non-move actions are visually grouped in the editor
+- [x] **GROUP-01**: Consecutive MouseMove blocks between non-move actions are visually grouped in the editor
 - [x] **GROUP-02**: User can select a movement group and edit its total duration — timestamps scale proportionally
-- [ ] **GROUP-03**: User can expand a group to edit individual move lines within it
-- [ ] **GROUP-04**: User can select individual lines within an expanded group
+- [x] **GROUP-03**: User can expand a group to edit individual move lines within it
+- [x] **GROUP-04**: User can select individual lines within an expanded group
 
 ### Flow Control
 
@@ -127,15 +127,15 @@ Updated during roadmap creation.
 | PLAY-03 | Phase 2 | Complete |
 | PLAY-04 | Phase 2 | Complete |
 | PLAY-05 | Phase 2 | Complete |
-| EDIT-01 | Phase 3 | Pending |
-| EDIT-02 | Phase 3 | Pending |
-| EDIT-03 | Phase 3 | Pending |
-| EDIT-04 | Phase 3 | Pending |
+| EDIT-01 | Phase 3 | Complete |
+| EDIT-02 | Phase 3 | Complete |
+| EDIT-03 | Phase 3 | Complete |
+| EDIT-04 | Phase 3 | Complete |
 | EDIT-05 | Phase 3 | Pending |
-| GROUP-01 | Phase 3 | Pending |
+| GROUP-01 | Phase 3 | Complete |
 | GROUP-02 | Phase 3 | Complete |
-| GROUP-03 | Phase 3 | Pending |
-| GROUP-04 | Phase 3 | Pending |
+| GROUP-03 | Phase 3 | Complete |
+| GROUP-04 | Phase 3 | Complete |
 | LIB-01 | Phase 3 | Complete |
 | LIB-02 | Phase 3 | Complete |
 | LIB-03 | Phase 3 | Complete |

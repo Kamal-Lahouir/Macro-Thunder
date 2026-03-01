@@ -42,6 +42,7 @@ Progress: [███████░░░] 70%
 | Phase 02-record-and-play P04 | 15 | 2 tasks | 3 files |
 | Phase 03-visual-block-editor P04 | 3 min | 2 tasks | 2 files |
 | Phase 03-visual-block-editor P01 | 3 min | 2 tasks | 2 files |
+| Phase 03-visual-block-editor P02 | 2 min | 2 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -68,6 +69,8 @@ Recent decisions affecting current work:
 - [Phase 02-record-and-play]: Play progress queue drained in existing 16ms coord timer — no third timer added
 - [Phase 03-04]: LibraryPanel emits signals to MainWindow for load/save separation of concerns
 - [Phase 03-01]: _rescale_group_coords single-move is a no-op — consistent with _rescale_group_duration no-op contract
+- [Phase 03-visual-block-editor]: BlockTableModel uses beginResetModel/endResetModel for all mutations — simpler than fine-grained insertRows given full display list rebuild
+- [Phase 03-visual-block-editor]: Expanded group state stored in Dict[int,bool] keyed on flat_start so it survives _rebuild_display_rows creating new GroupHeaderRow instances
 
 ### Pending Todos
 
