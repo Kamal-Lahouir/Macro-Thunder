@@ -36,7 +36,7 @@
 - [x] **EDIT-02**: User can delete one or multiple selected blocks
 - [x] **EDIT-03**: User can reorder blocks via drag-and-drop or up/down controls
 - [x] **EDIT-04**: User can multi-select blocks (click, shift-click, ctrl-click)
-- [ ] **EDIT-05**: User can manually insert a new action block at any position (from a block type menu)
+- [x] **EDIT-05**: User can manually insert a new action block at any position (from a block type menu)
 
 ### Editor — Movement Grouping
 
@@ -131,7 +131,7 @@ Updated during roadmap creation.
 | EDIT-02 | Phase 3 | Complete |
 | EDIT-03 | Phase 3 | Complete |
 | EDIT-04 | Phase 3 | Complete |
-| EDIT-05 | Phase 3 | Pending |
+| EDIT-05 | Phase 3 | Complete |
 | GROUP-01 | Phase 3 | Complete |
 | GROUP-02 | Phase 3 | Complete |
 | GROUP-03 | Phase 3 | Complete |
