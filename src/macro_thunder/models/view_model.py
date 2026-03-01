@@ -230,7 +230,11 @@ if _QT_AVAILABLE:
             return str(section + 1)
 
         def data(self, index, role=Qt.ItemDataRole.DisplayRole):
-            if not index.isValid() or role != Qt.ItemDataRole.DisplayRole:
+            if not index.isValid():
+                return None
+            if role == Qt.ItemDataRole.UserRole:
+                return self._display_rows[index.row()]
+            if role != Qt.ItemDataRole.DisplayRole:
                 return None
             row_obj = self._display_rows[index.row()]
             col = index.column()
