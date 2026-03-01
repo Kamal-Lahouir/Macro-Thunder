@@ -82,5 +82,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-01
-Stopped at: Completed 03-04-PLAN.md — LibraryPanel + rename_macro
-Resume file: .planning/phases/03-visual-block-editor/03-04-SUMMARY.md
+Stopped at: Completed 03-01-PLAN.md — Rescaling Logic + DisplayRow Types
+Resume file: .planning/phases/03-visual-block-editor/03-01-SUMMARY.md

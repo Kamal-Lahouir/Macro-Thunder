@@ -41,7 +41,7 @@
 ### Editor — Movement Grouping
 
 - [ ] **GROUP-01**: Consecutive MouseMove blocks between non-move actions are visually grouped in the editor
-- [ ] **GROUP-02**: User can select a movement group and edit its total duration — timestamps scale proportionally
+- [x] **GROUP-02**: User can select a movement group and edit its total duration — timestamps scale proportionally
 - [ ] **GROUP-03**: User can expand a group to edit individual move lines within it
 - [ ] **GROUP-04**: User can select individual lines within an expanded group
 
@@ -133,7 +133,7 @@ Updated during roadmap creation.
 | EDIT-04 | Phase 3 | Pending |
 | EDIT-05 | Phase 3 | Pending |
 | GROUP-01 | Phase 3 | Pending |
-| GROUP-02 | Phase 3 | Pending |
+| GROUP-02 | Phase 3 | Complete |
 | GROUP-03 | Phase 3 | Pending |
 | GROUP-04 | Phase 3 | Pending |
 | LIB-01 | Phase 3 | Complete |
