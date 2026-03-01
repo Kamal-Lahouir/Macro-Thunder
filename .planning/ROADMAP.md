@@ -57,7 +57,15 @@ Plans:
   3. User can expand a group to see and select individual move lines within it
   4. User can delete, reorder (drag-and-drop or arrow controls), and manually insert action blocks at any position
   5. User can see all saved macros in a library panel, load any macro into the editor, and save the current macro to a named file
-**Plans**: TBD
+**Plans**: 6 plans
+
+Plans:
+- [ ] 03-01-PLAN.md — TDD: DisplayRow types + timestamp/coordinate rescaling functions (view_model.py foundation)
+- [ ] 03-02-PLAN.md — BlockTableModel: full QAbstractTableModel with group display, expand/collapse, drag-drop, mutations
+- [ ] 03-03-PLAN.md — BlockDelegate + BlockTypeDialog: group row rendering and block type picker
+- [ ] 03-04-PLAN.md — LibraryPanel: file list sorted by MRU, Load/Rename/Delete, unsaved-changes guard
+- [ ] 03-05-PLAN.md — EditorPanel: QTableView wired to model + delegate, toolbar (Delete/Move/Add)
+- [ ] 03-06-PLAN.md — MainWindow wiring: load → editor, record-stop → editor, dirty flag, library refresh + human verify checkpoint
 
 ### Phase 4: Flow Control and Window Management
 **Goal**: Users can build macro workflows that loop, branch, and reliably focus the target game window before executing coordinate-dependent actions
