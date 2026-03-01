@@ -10,7 +10,7 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtCore import pyqtSignal
 
-from macro_thunder.models.view_model import BlockTableModel
+from macro_thunder.models.view_model import BlockTableModel, BlockRow, GroupHeaderRow, GroupChildRow
 from macro_thunder.models.document import MacroDocument
 from macro_thunder.ui.block_delegate import BlockDelegate
 from macro_thunder.ui.block_type_dialog import BlockTypeDialog
@@ -20,6 +20,7 @@ class EditorPanel(QFrame):
     """Central block-editor panel: table view + toolbar."""
 
     document_modified = pyqtSignal()  # forwarded from BlockTableModel
+    record_here_requested = pyqtSignal(int)  # flat block index to insert after (-1 = end)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -36,11 +37,14 @@ class EditorPanel(QFrame):
         self._btn_up = QPushButton("\u25b2 Up")
         self._btn_down = QPushButton("\u25bc Down")
         self._btn_add = QPushButton("+ Add Block")
+        self._btn_record_here = QPushButton("\u23fa Record Here")
+        self._btn_record_here.setToolTip("Start recording and insert new blocks after the selected row")
 
         toolbar_layout.addWidget(self._btn_delete)
         toolbar_layout.addWidget(self._btn_up)
         toolbar_layout.addWidget(self._btn_down)
         toolbar_layout.addStretch()
+        toolbar_layout.addWidget(self._btn_record_here)
         toolbar_layout.addWidget(self._btn_add)
 
         # --- Table view ---
@@ -66,6 +70,7 @@ class EditorPanel(QFrame):
         self._btn_up.clicked.connect(self._on_move_up)
         self._btn_down.clicked.connect(self._on_move_down)
         self._btn_add.clicked.connect(self._on_add_block)
+        self._btn_record_here.clicked.connect(self._on_record_here)
 
         self._update_button_state()
 
@@ -130,7 +135,43 @@ class EditorPanel(QFrame):
         after = rows[-1] if rows else (self._model.rowCount() - 1)
         self._model.insert_block(after, block)
 
+    def _on_record_here(self) -> None:
+        """Emit record_here_requested with the flat index after current selection."""
+        flat_index = self._selected_flat_end_index()
+        self.record_here_requested.emit(flat_index)
+
+    def _selected_flat_end_index(self) -> int:
+        """Return flat block index of the last selected row, or -1 (append at end)."""
+        if self._model is None:
+            return -1
+        rows = self._selected_display_rows()
+        if not rows:
+            return -1
+        last_display = rows[-1]
+        row_obj = self._model.display_row(last_display)
+        if row_obj is None:
+            return -1
+        if isinstance(row_obj, BlockRow):
+            return row_obj.flat_index
+        if isinstance(row_obj, GroupHeaderRow):
+            return row_obj.flat_end
+        if isinstance(row_obj, GroupChildRow):
+            return row_obj.flat_index
+        return -1
+
+    def insert_blocks_at(self, flat_index: int, blocks: list) -> None:
+        """Insert *blocks* after *flat_index* in the current model.
+
+        flat_index == -1 means append at end.
+        No-op if no document is loaded.
+        """
+        if self._model is None:
+            return
+        self._model.insert_blocks_at_flat(flat_index, blocks)
+
     def _update_button_state(self) -> None:
         enabled = self._model is not None
         for btn in [self._btn_delete, self._btn_up, self._btn_down, self._btn_add]:
             btn.setEnabled(enabled)
+        # Record Here is always available (inserts at end when nothing loaded too)
+        self._btn_record_here.setEnabled(True)

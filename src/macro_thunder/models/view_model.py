@@ -468,6 +468,24 @@ if _QT_AVAILABLE:
             self.endResetModel()
             self.document_modified.emit()
 
+        def display_row(self, display_row_index: int) -> "DisplayRow | None":
+            """Return the DisplayRow object for a given display row index."""
+            if 0 <= display_row_index < len(self._display_rows):
+                return self._display_rows[display_row_index]
+            return None
+
+        def insert_blocks_at_flat(self, flat_index: int, blocks: list) -> None:
+            """Insert a list of blocks after *flat_index* (-1 = append at end)."""
+            if flat_index == -1 or flat_index >= len(self._doc.blocks):
+                insert_at = len(self._doc.blocks)
+            else:
+                insert_at = flat_index + 1
+            self.beginResetModel()
+            self._doc.blocks[insert_at:insert_at] = blocks
+            self._rebuild_display_rows()
+            self.endResetModel()
+            self.document_modified.emit()
+
         def insert_block(self, after_display_row: int, block: ActionBlock) -> None:
             """Insert block after the given display row (-1 = prepend)."""
             if after_display_row == -1:

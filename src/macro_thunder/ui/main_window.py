@@ -102,6 +102,7 @@ class MainWindow(QMainWindow):
         self._macro_buffer: Optional[MacroDocument] = None
         self._state: AppState = AppState.IDLE
         self._rec_blocks: list = []
+        self._append_after_flat: int = -2  # -2 = replace mode; >= -1 = append after that index
 
         # Progress queue for thread-safe playback progress updates
         self._play_progress_queue: queue.Queue = queue.Queue()
@@ -112,6 +113,9 @@ class MainWindow(QMainWindow):
             self._hotkeys.register(self._settings)
         except Exception as e:
             QMessageBox.warning(self, "Hotkey Error", str(e))
+
+        # Connect editor "Record Here" button
+        self._editor_panel.record_here_requested.connect(self._start_record_here)
 
         # Connect toolbar signals
         self._toolbar_widget.record_requested.connect(self._start_record)
@@ -163,6 +167,18 @@ class MainWindow(QMainWindow):
     def _start_record(self) -> None:
         if self._state != AppState.IDLE:
             return
+        self._append_after_flat = -2  # replace mode
+        self._state = AppState.RECORDING
+        self._rec_blocks = []
+        self._recorder.start()
+        self._rec_drain_timer.start()
+        self._toolbar_widget.set_recording(True, 0)
+
+    def _start_record_here(self, flat_index: int) -> None:
+        """Start recording in append mode — new blocks inserted after flat_index."""
+        if self._state != AppState.IDLE:
+            return
+        self._append_after_flat = flat_index  # >= -1: append mode
         self._state = AppState.RECORDING
         self._rec_blocks = []
         self._recorder.start()
@@ -175,10 +191,19 @@ class MainWindow(QMainWindow):
         self._recorder.stop()
         self._rec_drain_timer.stop()
         self._drain_recorder()  # drain remaining events
-        doc = MacroDocument(blocks=self._rec_blocks)
         self._state = AppState.IDLE
         self._toolbar_widget.set_recording(False)
-        self._load_document(doc)
+        if self._append_after_flat >= -1 and self._macro_buffer is not None:
+            # Append mode: insert new blocks into existing document
+            self._editor_panel.insert_blocks_at(self._append_after_flat, self._rec_blocks)
+            self._macro_buffer.blocks = list(self._macro_buffer.blocks)  # ensure list
+            self._toolbar_widget.update_block_count(len(self._macro_buffer.blocks))
+            self.statusBar().showMessage(f"Appended {len(self._rec_blocks)} blocks", 3000)
+        else:
+            # Replace mode: load as new document
+            doc = MacroDocument(blocks=self._rec_blocks)
+            self._load_document(doc)
+        self._append_after_flat = -2
 
     def _drain_recorder(self) -> None:
         while not self._rec_queue.empty():

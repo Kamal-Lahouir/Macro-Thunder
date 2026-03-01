@@ -17,6 +17,7 @@ from macro_thunder.models.blocks import (
     MouseClickBlock,
     MouseScrollBlock,
     KeyPressBlock,
+    DelayBlock,
 )
 
 
@@ -79,12 +80,27 @@ class PlaybackEngine:
         """Main playback loop. Runs on background thread."""
         for _ in range(repeat):
             t0 = time.perf_counter()
+            extra_delay = 0.0  # accumulated seconds added by DelayBlocks
             for i, block in enumerate(blocks):
                 if self._stop_event.is_set():
                     return
 
+                if isinstance(block, DelayBlock):
+                    # Spin-wait for the delay duration, then accumulate the offset
+                    target = time.perf_counter() + block.duration / speed
+                    remaining = target - time.perf_counter()
+                    if remaining > 0.002:
+                        time.sleep(remaining - 0.002)
+                    while time.perf_counter() < target:
+                        pass
+                    extra_delay += block.duration / speed
+                    self._dispatch(block)
+                    if self._on_progress is not None:
+                        self._on_progress(i + 1, len(blocks))
+                    continue
+
                 # Compute absolute target time for this block
-                target = t0 + block.timestamp / speed  # type: ignore[union-attr]
+                target = t0 + block.timestamp / speed + extra_delay  # type: ignore[union-attr]
 
                 # Coarse sleep to avoid busy-waiting for most of the delay
                 remaining = target - time.perf_counter()
