@@ -14,7 +14,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Foundation** - App shell, data model, DPI awareness, and correct threading architecture (completed 2026-02-26)
 - [x] **Phase 2: Record and Play** - Full recording pipeline and playback engine — first end-to-end working macro (completed 2026-02-28)
-- [ ] **Phase 3: Visual Block Editor** - QAbstractTableModel block editor with movement grouping and group duration editing
+- [x] **Phase 3: Visual Block Editor** - QAbstractTableModel block editor with movement grouping and group duration editing (completed 2026-03-01)
 - [ ] **Phase 4: Flow Control and Window Management** - Label/Goto flow control and Window Focus action with interactive window picker
 
 ## Phase Details
@@ -88,5 +88,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 |-------|----------------|--------|-----------|
 | 1. Foundation | 3/3 | Complete   | 2026-02-26 |
 | 2. Record and Play | 4/4 | Complete   | 2026-02-28 |
-| 3. Visual Block Editor | 5/6 | In Progress|  |
+| 3. Visual Block Editor | 6/6 | Complete   | 2026-03-01 |
 | 4. Flow Control and Window Management | 0/? | Not started | - |
