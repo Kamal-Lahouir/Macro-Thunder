@@ -60,6 +60,16 @@ class MainWindow(QMainWindow):
         self._splitter.setStretchFactor(0, 0)
         self._splitter.setStretchFactor(1, 1)
 
+        # Dirty flag (unsaved-changes guard)
+        self._is_dirty: bool = False
+
+        # Connect editor dirty signal
+        self._editor_panel.document_modified.connect(self._on_document_modified)
+
+        # Connect library panel signals
+        self._library_panel.load_requested.connect(self._on_library_load)
+        self._library_panel.save_requested.connect(self._save_macro)
+
         self.setCentralWidget(self._splitter)
 
         # Status bar with live coordinate readout
@@ -165,10 +175,10 @@ class MainWindow(QMainWindow):
         self._recorder.stop()
         self._rec_drain_timer.stop()
         self._drain_recorder()  # drain remaining events
-        self._macro_buffer = MacroDocument(blocks=self._rec_blocks)
+        doc = MacroDocument(blocks=self._rec_blocks)
         self._state = AppState.IDLE
         self._toolbar_widget.set_recording(False)
-        self._toolbar_widget.update_block_count(0)
+        self._load_document(doc)
 
     def _drain_recorder(self) -> None:
         while not self._rec_queue.empty():
@@ -214,15 +224,42 @@ class MainWindow(QMainWindow):
             self, "Save Macro", str(SETTINGS_DIR), "Macro Files (*.json)"
         )
         if path:
-            save_macro(self._macro_buffer, pathlib.Path(path))
+            p = pathlib.Path(path)
+            if p.stem != self._macro_buffer.name:
+                self._macro_buffer.name = p.stem
+            save_macro(self._macro_buffer, p)
+            self._is_dirty = False
+            self._library_panel.set_dirty(False)
+            self._library_panel.refresh()
 
     def _open_macro(self) -> None:
         path, _ = QFileDialog.getOpenFileName(
             self, "Open Macro", str(SETTINGS_DIR), "Macro Files (*.json)"
         )
         if path:
-            self._macro_buffer = load_macro(pathlib.Path(path))
-            self.statusBar().showMessage(f"Loaded: {pathlib.Path(path).name}", 3000)
+            doc = load_macro(pathlib.Path(path))
+            self._load_document(doc)
+
+    # ------------------------------------------------------------------
+    # Integration helpers
+    # ------------------------------------------------------------------
+
+    def _load_document(self, doc: MacroDocument) -> None:
+        """Central load helper: wire buffer, clear dirty, update editor."""
+        self._macro_buffer = doc
+        self._is_dirty = False
+        self._library_panel.set_dirty(False)
+        self._editor_panel.load_document(doc)
+        self._toolbar_widget.update_block_count(len(doc.blocks))
+        self.statusBar().showMessage(f"Loaded: {doc.name}", 3000)
+
+    def _on_document_modified(self) -> None:
+        self._is_dirty = True
+        self._library_panel.set_dirty(True)
+
+    def _on_library_load(self, path: str) -> None:
+        doc = load_macro(pathlib.Path(path))
+        self._load_document(doc)
 
     def _open_settings(self) -> None:
         dlg = SettingsDialog(self._settings, self)
