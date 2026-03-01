@@ -1,8 +1,136 @@
-from PyQt6.QtWidgets import QFrame, QLabel, QVBoxLayout
+"""EditorPanel — full block editor panel for Phase 3.
+
+Provides a QTableView backed by BlockTableModel with a toolbar containing
+Delete, Move Up, Move Down, and Add Block buttons.  BlockDelegate handles
+group row expand/collapse.
+"""
+from PyQt6.QtWidgets import (
+    QFrame, QVBoxLayout, QHBoxLayout, QPushButton,
+    QTableView, QAbstractItemView,
+)
+from PyQt6.QtCore import pyqtSignal
+
+from macro_thunder.models.view_model import BlockTableModel
+from macro_thunder.models.document import MacroDocument
+from macro_thunder.ui.block_delegate import BlockDelegate
+from macro_thunder.ui.block_type_dialog import BlockTypeDialog
 
 
 class EditorPanel(QFrame):
+    """Central block-editor panel: table view + toolbar."""
+
+    document_modified = pyqtSignal()  # forwarded from BlockTableModel
+
     def __init__(self, parent=None):
         super().__init__(parent)
+        self._model: BlockTableModel | None = None
+
         layout = QVBoxLayout(self)
-        layout.addWidget(QLabel("Block Editor — Phase 3"))
+        layout.setContentsMargins(0, 0, 0, 0)
+
+        # --- Toolbar row ---
+        toolbar_layout = QHBoxLayout()
+        toolbar_layout.setContentsMargins(4, 4, 4, 0)
+
+        self._btn_delete = QPushButton("Delete")
+        self._btn_up = QPushButton("\u25b2 Up")
+        self._btn_down = QPushButton("\u25bc Down")
+        self._btn_add = QPushButton("+ Add Block")
+
+        toolbar_layout.addWidget(self._btn_delete)
+        toolbar_layout.addWidget(self._btn_up)
+        toolbar_layout.addWidget(self._btn_down)
+        toolbar_layout.addStretch()
+        toolbar_layout.addWidget(self._btn_add)
+
+        # --- Table view ---
+        self._table = QTableView()
+        self._table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
+        self._table.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
+        self._table.setDragDropMode(QAbstractItemView.DragDropMode.InternalMove)
+        self._table.setDragDropOverwriteMode(False)
+        self._table.setDropIndicatorShown(True)
+        self._table.horizontalHeader().setStretchLastSection(True)
+        self._table.verticalHeader().setVisible(False)
+        self._table.setAlternatingRowColors(True)
+
+        self._delegate = BlockDelegate()
+        self._table.setItemDelegate(self._delegate)
+        self._delegate.toggle_group_requested.connect(self._on_toggle_group)
+
+        layout.addLayout(toolbar_layout)
+        layout.addWidget(self._table)
+
+        # --- Button connections ---
+        self._btn_delete.clicked.connect(self._on_delete)
+        self._btn_up.clicked.connect(self._on_move_up)
+        self._btn_down.clicked.connect(self._on_move_down)
+        self._btn_add.clicked.connect(self._on_add_block)
+
+        self._update_button_state()
+
+    # ------------------------------------------------------------------
+    # Public API
+    # ------------------------------------------------------------------
+
+    def load_document(self, doc: MacroDocument) -> None:
+        """Replace the current model with one built from *doc*."""
+        self._model = BlockTableModel(doc)
+        self._model.document_modified.connect(self.document_modified)
+        self._table.setModel(self._model)
+        self._table.setColumnWidth(0, 200)
+        self._table.setColumnWidth(1, 250)
+        self._table.setColumnWidth(2, 100)
+        self._update_button_state()
+
+    # ------------------------------------------------------------------
+    # Internal helpers
+    # ------------------------------------------------------------------
+
+    def _selected_display_rows(self) -> list[int]:
+        indexes = self._table.selectionModel().selectedRows()
+        return sorted({idx.row() for idx in indexes})
+
+    def _on_toggle_group(self, display_row_index: int) -> None:
+        if self._model:
+            self._model.toggle_group(display_row_index)
+
+    def _on_delete(self) -> None:
+        if self._model is None:
+            return
+        rows = self._selected_display_rows()
+        if not rows:
+            return
+        self._table.clearSelection()
+        self._model.delete_rows(rows)
+
+    def _on_move_up(self) -> None:
+        if self._model is None:
+            return
+        rows = self._selected_display_rows()
+        if not rows:
+            return
+        self._model.move_rows_up(rows)
+
+    def _on_move_down(self) -> None:
+        if self._model is None:
+            return
+        rows = self._selected_display_rows()
+        if not rows:
+            return
+        self._model.move_rows_down(rows)
+
+    def _on_add_block(self) -> None:
+        if self._model is None:
+            return
+        block = BlockTypeDialog.get_block(self)
+        if block is None:
+            return
+        rows = self._selected_display_rows()
+        after = rows[-1] if rows else (self._model.rowCount() - 1)
+        self._model.insert_block(after, block)
+
+    def _update_button_state(self) -> None:
+        enabled = self._model is not None
+        for btn in [self._btn_delete, self._btn_up, self._btn_down, self._btn_add]:
+            btn.setEnabled(enabled)
