@@ -121,7 +121,8 @@ class PlaybackEngine:
 
                 # --- Flow control: Label ---
                 if isinstance(block, LabelBlock):
-                    progress_since_last_goto = True
+                    # Labels are jump targets only — do NOT count as progress.
+                    # Only real action blocks reset the loop-detection counter.
                     i += 1
                     continue
 
