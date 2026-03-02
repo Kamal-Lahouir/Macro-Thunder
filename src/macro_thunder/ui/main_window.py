@@ -82,6 +82,13 @@ class MainWindow(QMainWindow):
         # File menu
         file_menu = self.menuBar().addMenu("&File")
 
+        new_action = QAction("&New Macro", self)
+        new_action.setShortcut("Ctrl+N")
+        new_action.triggered.connect(self._new_macro)
+        file_menu.addAction(new_action)
+
+        file_menu.addSeparator()
+
         save_action = QAction("&Save Macro...", self)
         save_action.setShortcut("Ctrl+S")
         save_action.triggered.connect(self._save_macro)
@@ -194,8 +201,33 @@ class MainWindow(QMainWindow):
     # Recording slots
     # ------------------------------------------------------------------
 
+    def _confirm_discard(self) -> bool:
+        """Return True if it's safe to discard the current document.
+
+        If the document has unsaved changes, ask the user. Returns False if
+        they chose to cancel.
+        """
+        if not self._is_dirty:
+            return True
+        reply = QMessageBox.question(
+            self,
+            "Unsaved Changes",
+            "You have unsaved changes. Save before continuing?",
+            QMessageBox.StandardButton.Save
+            | QMessageBox.StandardButton.Discard
+            | QMessageBox.StandardButton.Cancel,
+        )
+        if reply == QMessageBox.StandardButton.Save:
+            self._save_macro()
+            return not self._is_dirty  # False if save was cancelled
+        if reply == QMessageBox.StandardButton.Discard:
+            return True
+        return False  # Cancel
+
     def _start_record(self) -> None:
         if self._state != AppState.IDLE:
+            return
+        if not self._confirm_discard():
             return
         self._append_after_flat = -2  # replace mode
         self._state = AppState.RECORDING
@@ -284,6 +316,11 @@ class MainWindow(QMainWindow):
     # File menu slots
     # ------------------------------------------------------------------
 
+    def _new_macro(self) -> None:
+        if not self._confirm_discard():
+            return
+        self._load_document(MacroDocument(blocks=[]))
+
     def _save_macro(self) -> None:
         if self._macro_buffer is None:
             QMessageBox.information(self, "Nothing to Save", "No macro in memory.")
@@ -301,6 +338,8 @@ class MainWindow(QMainWindow):
             self._library_panel.refresh()
 
     def _open_macro(self) -> None:
+        if not self._confirm_discard():
+            return
         path, _ = QFileDialog.getOpenFileName(
             self, "Open Macro", str(SETTINGS_DIR), "Macro Files (*.json)"
         )
