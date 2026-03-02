@@ -51,7 +51,15 @@ class DelayBlock:
 class WindowFocusBlock:
     executable: str
     title: str
-    match_mode: str
+    match_mode: str          # "Contains" | "Exact" | "Starts With"
+    timeout: float = 5.0     # seconds to wait for window to appear
+    on_failure_label: str = ""   # empty = continue to next block on failure
+    on_success_label: str = ""   # empty = "Next" (continue to next block)
+    reposition: bool = False     # whether to reposition/resize window on success
+    x: int = 0
+    y: int = 0
+    w: int = 0
+    h: int = 0
     type: Literal["WindowFocus"] = field(default="WindowFocus", init=False)
 
 
