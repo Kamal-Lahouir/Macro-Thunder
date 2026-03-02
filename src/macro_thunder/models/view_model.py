@@ -234,6 +234,26 @@ if _QT_AVAILABLE:
                 return None
             if role == Qt.ItemDataRole.UserRole:
                 return self._display_rows[index.row()]
+            if role == Qt.ItemDataRole.BackgroundRole:
+                row_obj = self._display_rows[index.row()]
+                if isinstance(row_obj, BlockRow):
+                    block = self._doc.blocks[row_obj.flat_index]
+                    if isinstance(block, (LabelBlock, GotoBlock)):
+                        from PyQt6.QtGui import QBrush, QColor
+                        return QBrush(QColor(55, 45, 80))  # muted indigo — fits dark theme
+                return None
+            if role == Qt.ItemDataRole.DecorationRole:
+                row_obj = self._display_rows[index.row()]
+                if isinstance(row_obj, BlockRow) and index.column() == 0:
+                    block = self._doc.blocks[row_obj.flat_index]
+                    from PyQt6.QtWidgets import QApplication
+                    style = QApplication.style()
+                    if isinstance(block, LabelBlock):
+                        # SP_CommandLink — right-pointing arrow, good "flag/label" stand-in
+                        return style.standardIcon(style.StandardPixmap.SP_CommandLink)
+                    if isinstance(block, GotoBlock):
+                        return style.standardIcon(style.StandardPixmap.SP_ArrowRight)
+                return None
             if role not in (Qt.ItemDataRole.DisplayRole, Qt.ItemDataRole.EditRole):
                 return None
             row_obj = self._display_rows[index.row()]
