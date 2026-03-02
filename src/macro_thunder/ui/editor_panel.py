@@ -6,14 +6,16 @@ group row expand/collapse.
 """
 from PyQt6.QtWidgets import (
     QFrame, QVBoxLayout, QHBoxLayout, QPushButton,
-    QTableView, QAbstractItemView,
+    QTableView, QAbstractItemView, QWidget,
 )
 from PyQt6.QtCore import pyqtSignal
 
 from macro_thunder.models.view_model import BlockTableModel, BlockRow, GroupHeaderRow, GroupChildRow
 from macro_thunder.models.document import MacroDocument
+from macro_thunder.models.blocks import LabelBlock, GotoBlock, WindowFocusBlock
 from macro_thunder.ui.block_delegate import BlockDelegate
 from macro_thunder.ui.block_type_dialog import BlockTypeDialog
+from macro_thunder.ui.block_panels import LabelPanel, GotoPanel, WindowFocusPanel
 
 
 class EditorPanel(QFrame):
@@ -22,9 +24,11 @@ class EditorPanel(QFrame):
     document_modified = pyqtSignal()  # forwarded from BlockTableModel
     record_here_requested = pyqtSignal(int)  # flat block index to insert after (-1 = end)
 
-    def __init__(self, parent=None):
+    def __init__(self, picker_service=None, parent=None):
         super().__init__(parent)
         self._model: BlockTableModel | None = None
+        self._picker_service = picker_service
+        self._detail_widget: QWidget | None = None
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -65,6 +69,14 @@ class EditorPanel(QFrame):
         layout.addLayout(toolbar_layout)
         layout.addWidget(self._table)
 
+        # --- Detail panel container (shown below table on single block selection) ---
+        self._detail_container = QWidget()
+        self._detail_container.setMaximumHeight(220)
+        self._detail_layout = QVBoxLayout(self._detail_container)
+        self._detail_layout.setContentsMargins(0, 0, 0, 0)
+        self._detail_container.hide()
+        layout.addWidget(self._detail_container)
+
         # --- Button connections ---
         self._btn_delete.clicked.connect(self._on_delete)
         self._btn_up.clicked.connect(self._on_move_up)
@@ -80,12 +92,14 @@ class EditorPanel(QFrame):
 
     def load_document(self, doc: MacroDocument) -> None:
         """Replace the current model with one built from *doc*."""
+        self._clear_detail_panel()
         self._model = BlockTableModel(doc)
         self._model.document_modified.connect(self.document_modified)
         self._table.setModel(self._model)
         self._table.setColumnWidth(0, 200)
         self._table.setColumnWidth(1, 250)
         self._table.setColumnWidth(2, 100)
+        self._table.selectionModel().selectionChanged.connect(self._on_selection_changed)
         self._update_button_state()
 
     # ------------------------------------------------------------------
@@ -106,6 +120,7 @@ class EditorPanel(QFrame):
         rows = self._selected_display_rows()
         if not rows:
             return
+        self._clear_detail_panel()
         self._table.clearSelection()
         self._model.delete_rows(rows)
 
@@ -115,6 +130,7 @@ class EditorPanel(QFrame):
         rows = self._selected_display_rows()
         if not rows:
             return
+        self._clear_detail_panel()
         self._model.move_rows_up(rows)
 
     def _on_move_down(self) -> None:
@@ -123,6 +139,7 @@ class EditorPanel(QFrame):
         rows = self._selected_display_rows()
         if not rows:
             return
+        self._clear_detail_panel()
         self._model.move_rows_down(rows)
 
     def _on_add_block(self) -> None:
@@ -131,6 +148,7 @@ class EditorPanel(QFrame):
         block = BlockTypeDialog.get_block(self)
         if block is None:
             return
+        self._clear_detail_panel()
         rows = self._selected_display_rows()
         after = rows[-1] if rows else (self._model.rowCount() - 1)
         self._model.insert_block(after, block)
@@ -168,6 +186,41 @@ class EditorPanel(QFrame):
         if self._model is None:
             return
         self._model.insert_blocks_at_flat(flat_index, blocks)
+
+    def _on_selection_changed(self, *_):
+        """Show/hide detail panel based on selected block type."""
+        self._clear_detail_panel()
+        if self._model is None:
+            return
+        rows = self._selected_display_rows()
+        if len(rows) != 1:
+            return  # only show panel for single selection
+        row_obj = self._model.display_row(rows[0])
+        if row_obj is None or not isinstance(row_obj, BlockRow):
+            return  # groups/headers: no detail panel
+        block = self._model._doc.blocks[row_obj.flat_index]
+        panel = None
+        if isinstance(block, LabelBlock):
+            panel = LabelPanel(block, self._emit_modified)
+        elif isinstance(block, GotoBlock):
+            panel = GotoPanel(block, self._emit_modified)
+        elif isinstance(block, WindowFocusBlock):
+            panel = WindowFocusPanel(block, self._emit_modified, self._picker_service)
+        if panel is not None:
+            self._detail_layout.addWidget(panel)
+            self._detail_widget = panel
+            self._detail_container.show()
+
+    def _emit_modified(self):
+        """Called by panels when a block field changes."""
+        self.document_modified.emit()
+
+    def _clear_detail_panel(self):
+        if self._detail_widget is not None:
+            self._detail_layout.removeWidget(self._detail_widget)
+            self._detail_widget.deleteLater()
+            self._detail_widget = None
+        self._detail_container.hide()
 
     def _update_button_state(self) -> None:
         enabled = self._model is not None
