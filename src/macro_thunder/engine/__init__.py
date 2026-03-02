@@ -18,6 +18,14 @@ from macro_thunder.models.blocks import (
     MouseScrollBlock,
     KeyPressBlock,
     DelayBlock,
+    LabelBlock,
+    GotoBlock,
+    WindowFocusBlock,
+)
+from macro_thunder.engine.window_utils import (
+    _find_window,
+    _activate_window,
+    _set_window_rect,
 )
 
 
@@ -30,6 +38,9 @@ class PlaybackEngine:
         on_progress: callable(index: int, total: int) called after each block
             dispatch. Called from the playback thread — use a queue to bridge
             to Qt.
+        on_loop_detected: callable(flat_index: int, label_name: str) called when
+            a GotoBlock fires more than 1000 times without non-flow progress.
+            Called from the playback thread — use a queue to bridge to Qt.
     """
 
     def __init__(
@@ -37,10 +48,12 @@ class PlaybackEngine:
         mouse_ctrl=None,
         kb_ctrl=None,
         on_progress: Optional[Callable[[int, int], None]] = None,
+        on_loop_detected: Optional[Callable[[int, str], None]] = None,
     ) -> None:
         self._mouse_ctrl = mouse_ctrl if mouse_ctrl is not None else mouse.Controller()
         self._kb_ctrl = kb_ctrl if kb_ctrl is not None else keyboard.Controller()
         self._on_progress = on_progress
+        self._on_loop_detected = on_loop_detected
         self._stop_event = threading.Event()
         self._thread: Optional[threading.Thread] = None
 
@@ -78,6 +91,13 @@ class PlaybackEngine:
         repeat: int,
     ) -> None:
         """Main playback loop. Runs on background thread."""
+        # Build label index once per _run call (outside repeat loop)
+        label_index: dict[str, int] = {
+            b.name: idx
+            for idx, b in enumerate(blocks)
+            if isinstance(b, LabelBlock)
+        }
+
         for _ in range(repeat):
             t0 = time.perf_counter()
             # virtual_time: monotonically-increasing playback clock (recording seconds).
@@ -89,9 +109,73 @@ class PlaybackEngine:
             virtual_time = 0.0
             prev_ts = 0.0  # recording timestamp of the last real block seen
 
-            for i, block in enumerate(blocks):
+            i = 0
+            goto_fire_count: dict[int, int] = {}
+            progress_since_last_goto = False
+
+            while i < len(blocks):
                 if self._stop_event.is_set():
                     return
+
+                block = blocks[i]
+
+                # --- Flow control: Label ---
+                if isinstance(block, LabelBlock):
+                    progress_since_last_goto = True
+                    i += 1
+                    continue
+
+                # --- Flow control: Goto ---
+                if isinstance(block, GotoBlock):
+                    if progress_since_last_goto:
+                        goto_fire_count.clear()
+                    count = goto_fire_count.get(i, 0) + 1
+                    goto_fire_count[i] = count
+                    progress_since_last_goto = False
+
+                    if count > 1000:
+                        if self._on_loop_detected:
+                            self._on_loop_detected(i, block.target)
+                        return
+
+                    target_idx = label_index.get(block.target)
+                    if target_idx is None:
+                        return  # unresolved label (should be caught by pre-flight)
+                    i = target_idx
+                    continue
+
+                # --- WindowFocus ---
+                if isinstance(block, WindowFocusBlock):
+                    deadline = time.perf_counter() + block.timeout
+                    found_hwnd = None
+                    while time.perf_counter() < deadline:
+                        found_hwnd = _find_window(
+                            block.executable, block.title, block.match_mode
+                        )
+                        if found_hwnd:
+                            break
+                        if self._stop_event.wait(timeout=0.5):  # returns True if set
+                            return
+                    if found_hwnd:
+                        _activate_window(found_hwnd)
+                        if block.reposition and block.w > 0 and block.h > 0:
+                            _set_window_rect(found_hwnd, block.x, block.y, block.w, block.h)
+                        if block.on_success_label and block.on_success_label in label_index:
+                            i = label_index[block.on_success_label]
+                        else:
+                            i += 1
+                    else:
+                        if block.on_failure_label and block.on_failure_label in label_index:
+                            i = label_index[block.on_failure_label]
+                        else:
+                            i += 1
+                    progress_since_last_goto = True
+                    goto_fire_count.clear()
+                    continue
+
+                # --- Normal action blocks (timing + dispatch) ---
+                progress_since_last_goto = True
+                goto_fire_count.clear()
 
                 if isinstance(block, DelayBlock):
                     virtual_time += block.duration
@@ -116,6 +200,8 @@ class PlaybackEngine:
                 if self._on_progress is not None:
                     self._on_progress(i + 1, len(blocks))
 
+                i += 1
+
     def _dispatch(self, block: object) -> None:
         """Dispatch a single block to the appropriate pynput controller."""
         if isinstance(block, MouseMoveBlock):
@@ -138,7 +224,7 @@ class PlaybackEngine:
             else:
                 self._kb_ctrl.release(key)
 
-        # DelayBlock, LabelBlock, GotoBlock, WindowFocusBlock: no-op (Phase 4)
+        # LabelBlock, GotoBlock, WindowFocusBlock: handled in _run before dispatch
         # Unknown / future block types: silently ignored
 
     @staticmethod
