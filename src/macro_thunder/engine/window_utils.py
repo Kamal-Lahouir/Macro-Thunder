@@ -17,6 +17,7 @@ import os
 # Win32 constants
 # ---------------------------------------------------------------------------
 SW_RESTORE = 9
+SW_SHOW = 5
 GA_ROOT = 2
 SWP_NOZORDER = 0x0004
 SWP_NOACTIVATE = 0x0010
@@ -112,7 +113,11 @@ def _activate_window(hwnd: int) -> None:
 
     See 04-RESEARCH.md Pitfall 1 for why bare SetForegroundWindow is unreliable.
     """
-    user32.ShowWindow(hwnd, SW_RESTORE)
+    # Only restore if minimized — don't un-maximize a fullscreen window
+    if user32.IsIconic(hwnd):
+        user32.ShowWindow(hwnd, SW_RESTORE)
+    else:
+        user32.ShowWindow(hwnd, SW_SHOW)
     fg = user32.GetForegroundWindow()
     fg_tid = user32.GetWindowThreadProcessId(fg, None)
     this_tid = kernel32.GetCurrentThreadId()
