@@ -56,7 +56,7 @@
 
 - [x] **WIN-01**: User can insert a Window Focus action block specifying target executable name and window title
 - [x] **WIN-02**: Window title matching supports three modes: Contains, Exact, Starts With
-- [ ] **WIN-03**: User can use an interactive "Select Window..." picker — click on a running window to fill the fields
+- [x] **WIN-03**: User can use an interactive "Select Window..." picker — click on a running window to fill the fields
 - [x] **WIN-04**: On success: optionally set window position (X, Y) and size (W, H)
 - [x] **WIN-05**: On success: flow continues to "Next" or a named label
 - [x] **WIN-06**: On failure: wait N seconds, then jump to a named label (e.g. End)
@@ -145,7 +145,7 @@ Updated during roadmap creation.
 | FLOW-04 | Phase 4 | Complete |
 | WIN-01 | Phase 4 | Complete |
 | WIN-02 | Phase 4 | Complete |
-| WIN-03 | Phase 4 | Pending |
+| WIN-03 | Phase 4 | Complete |
 | WIN-04 | Phase 4 | Complete |
 | WIN-05 | Phase 4 | Complete |
 | WIN-06 | Phase 4 | Complete |
