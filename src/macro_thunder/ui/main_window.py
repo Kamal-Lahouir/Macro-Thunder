@@ -265,6 +265,10 @@ class MainWindow(QMainWindow):
             # Replace mode: load as new document
             doc = MacroDocument(blocks=self._rec_blocks)
             self._load_document(doc)
+            # Mark dirty so the user is prompted before discarding unsaved recording
+            if self._rec_blocks:
+                self._is_dirty = True
+                self._library_panel.set_dirty(True)
         self._append_after_flat = -2
 
     def _drain_recorder(self) -> None:
