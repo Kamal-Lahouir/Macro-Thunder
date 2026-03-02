@@ -99,11 +99,11 @@ class MainWindow(QMainWindow):
         open_action.triggered.connect(self._open_macro)
         file_menu.addAction(open_action)
 
-        file_menu.addSeparator()
-
-        settings_action = QAction("&Settings...", self)
+        # Settings top-level menu
+        settings_menu = self.menuBar().addMenu("&Settings")
+        settings_action = QAction("&Preferences...", self)
         settings_action.triggered.connect(self._open_settings)
-        file_menu.addAction(settings_action)
+        settings_menu.addAction(settings_action)
 
         # Services
         self._rec_queue: queue.Queue = queue.Queue()
