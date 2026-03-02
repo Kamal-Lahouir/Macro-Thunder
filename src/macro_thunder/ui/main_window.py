@@ -75,9 +75,11 @@ class MainWindow(QMainWindow):
 
         self.setCentralWidget(self._splitter)
 
-        # Status bar with live coordinate readout
+        # Status bar with live coordinate readout + click mode label
         self._coord_label = QLabel("X: 0  Y: 0")
         self.statusBar().addPermanentWidget(self._coord_label)
+        self._click_mode_label = QLabel("")
+        self.statusBar().addPermanentWidget(self._click_mode_label)
 
         # File menu
         file_menu = self.menuBar().addMenu("&File")
@@ -107,7 +109,11 @@ class MainWindow(QMainWindow):
 
         # Services
         self._rec_queue: queue.Queue = queue.Queue()
-        self._recorder = RecorderService(self._rec_queue, self._settings.mouse_threshold_px)
+        self._recorder = RecorderService(
+            self._rec_queue,
+            self._settings.mouse_threshold_px,
+            click_mode=self._settings.click_mode,
+        )
         self._macro_buffer: Optional[MacroDocument] = None
         self._state: AppState = AppState.IDLE
         self._rec_blocks: list = []
@@ -235,6 +241,14 @@ class MainWindow(QMainWindow):
         self._append_after_flat = -2  # replace mode
         self._state = AppState.RECORDING
         self._rec_blocks = []
+        # Recreate recorder with current settings so click_mode is always fresh
+        self._recorder = RecorderService(
+            self._rec_queue,
+            self._settings.mouse_threshold_px,
+            click_mode=self._settings.click_mode,
+        )
+        mode_text = "Combined" if self._settings.click_mode == "combined" else "Separate"
+        self._click_mode_label.setText(f"Click: {mode_text}")
         self._recorder.start()
         self._rec_drain_timer.start()
         self._toolbar_widget.set_recording(True, 0)
@@ -246,6 +260,13 @@ class MainWindow(QMainWindow):
         self._append_after_flat = flat_index  # >= -1: append mode
         self._state = AppState.RECORDING
         self._rec_blocks = []
+        self._recorder = RecorderService(
+            self._rec_queue,
+            self._settings.mouse_threshold_px,
+            click_mode=self._settings.click_mode,
+        )
+        mode_text = "Combined" if self._settings.click_mode == "combined" else "Separate"
+        self._click_mode_label.setText(f"Click: {mode_text}")
         self._recorder.start()
         self._rec_drain_timer.start()
         self._toolbar_widget.set_recording(True, 0)
@@ -254,6 +275,7 @@ class MainWindow(QMainWindow):
         if self._state != AppState.RECORDING:
             return
         self._recorder.stop()
+        self._click_mode_label.setText("")
         self._rec_drain_timer.stop()
         self._drain_recorder()  # drain remaining events
         self._state = AppState.IDLE

@@ -227,7 +227,10 @@ class PlaybackEngine:
             btn = mouse.Button[block.button]
             if block.direction == "down":
                 self._mouse_ctrl.press(btn)
-            else:
+            elif block.direction == "up":
+                self._mouse_ctrl.release(btn)
+            elif block.direction == "click":
+                self._mouse_ctrl.press(btn)
                 self._mouse_ctrl.release(btn)
 
         elif isinstance(block, MouseScrollBlock):

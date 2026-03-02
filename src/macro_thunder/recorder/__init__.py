@@ -32,9 +32,15 @@ class RecorderService:
         Moves smaller than this value are discarded. Default: 3.
     """
 
-    def __init__(self, event_queue: queue.Queue, pixel_threshold: int = 3) -> None:
+    def __init__(
+        self,
+        event_queue: queue.Queue,
+        pixel_threshold: int = 3,
+        click_mode: str = "separate",
+    ) -> None:
         self._queue = event_queue
         self._threshold = pixel_threshold
+        self._click_mode = click_mode
         self._record_start: float = 0.0
         self._last_move_x: Optional[int] = None
         self._last_move_y: Optional[int] = None
@@ -111,15 +117,29 @@ class RecorderService:
 
     def _on_click(self, x: int, y: int, button: mouse.Button, pressed: bool) -> None:
         ts = time.perf_counter() - self._record_start
-        self._queue.put(
-            MouseClickBlock(
-                x=x,
-                y=y,
-                button=button.name,
-                direction="down" if pressed else "up",
-                timestamp=ts,
+        if self._click_mode == "combined":
+            # In combined mode emit a single "click" block only on press;
+            # suppress the release so the pair appears as one block.
+            if pressed:
+                self._queue.put(
+                    MouseClickBlock(
+                        x=x,
+                        y=y,
+                        button=button.name,
+                        direction="click",
+                        timestamp=ts,
+                    )
+                )
+        else:
+            self._queue.put(
+                MouseClickBlock(
+                    x=x,
+                    y=y,
+                    button=button.name,
+                    direction="down" if pressed else "up",
+                    timestamp=ts,
+                )
             )
-        )
 
     def _on_scroll(self, x: int, y: int, dx: int, dy: int) -> None:
         ts = time.perf_counter() - self._record_start
