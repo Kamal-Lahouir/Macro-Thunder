@@ -240,7 +240,10 @@ class PlaybackEngine:
             key = self._parse_key(block.key)
             if block.direction == "down":
                 self._kb_ctrl.press(key)
-            else:
+            elif block.direction == "up":
+                self._kb_ctrl.release(key)
+            elif block.direction == "key":
+                self._kb_ctrl.press(key)
                 self._kb_ctrl.release(key)
 
         # LabelBlock, GotoBlock, WindowFocusBlock: handled in _run before dispatch

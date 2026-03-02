@@ -279,6 +279,16 @@ class MainWindow(QMainWindow):
         """Start recording in append mode — new blocks inserted after flat_index."""
         if self._state != AppState.IDLE:
             return
+        if self._macro_buffer is None:
+            # No document open — show error and bail.
+            # Use tray message so this works even when the window is not in focus.
+            self._tray_icon.showMessage(
+                "Record Here",
+                "No macro is open. Open or record a macro first.",
+                QSystemTrayIcon.MessageIcon.Warning,
+                3000,
+            )
+            return
         self._append_after_flat = flat_index  # >= -1: append mode
         self._state = AppState.RECORDING
         self._rec_blocks = []
@@ -437,6 +447,14 @@ class MainWindow(QMainWindow):
         """Triggered by global Record Here hotkey — starts recording at selected position."""
         flat_index = self._editor_panel.get_selected_flat_index()
         self._start_record_here(flat_index)
+        if self._state == AppState.RECORDING:
+            pos_text = f"after block {flat_index + 1}" if flat_index >= 0 else "at end"
+            self._tray_icon.showMessage(
+                "Recording Started",
+                f"Recording {pos_text}. Press Stop hotkey to finish.",
+                QSystemTrayIcon.MessageIcon.Information,
+                2000,
+            )
 
     def _play_sound_cue(self) -> None:
         """Play a short beep if sound_cue_enabled. Windows only; silently skipped elsewhere."""

@@ -147,9 +147,14 @@ class RecorderService:
 
     def _on_press(self, key: keyboard.Key | keyboard.KeyCode) -> None:
         ts = time.perf_counter() - self._record_start
-        self._queue.put(KeyPressBlock(key=self._key_to_str(key), direction="down", timestamp=ts))
+        if self._click_mode == "combined":
+            self._queue.put(KeyPressBlock(key=self._key_to_str(key), direction="key", timestamp=ts))
+        else:
+            self._queue.put(KeyPressBlock(key=self._key_to_str(key), direction="down", timestamp=ts))
 
     def _on_release(self, key: keyboard.Key | keyboard.KeyCode) -> None:
+        if self._click_mode == "combined":
+            return  # suppress release — combined mode emits a single "key" block on press
         ts = time.perf_counter() - self._record_start
         self._queue.put(KeyPressBlock(key=self._key_to_str(key), direction="up", timestamp=ts))
 
