@@ -77,7 +77,15 @@ Plans:
   3. Playback detects a Goto loop that makes no progress and surfaces a warning before running indefinitely
   4. User can insert a Window Focus block, use the interactive picker to click on a running window and auto-fill its fields, and choose Contains/Exact/Starts With title matching
   5. On focus success, the window is optionally repositioned/resized and execution continues to Next or a named label; on failure, execution waits N seconds then jumps to a named label
-**Plans**: TBD
+**Plans**: 6 plans
+
+Plans:
+- [ ] 04-01-PLAN.md — TDD: validate_gotos + window_utils (matching modes, ctypes helpers)
+- [ ] 04-02-PLAN.md — Data model: extend WindowFocusBlock with timeout/label/reposition fields
+- [ ] 04-03-PLAN.md — Engine refactor: while-loop playback with Label/Goto/WindowFocus dispatch
+- [ ] 04-04-PLAN.md — Label/Goto visual styling + WindowPickerService
+- [ ] 04-05-PLAN.md — Block detail panels: LabelPanel, GotoPanel, WindowFocusPanel + EditorPanel wiring
+- [ ] 04-06-PLAN.md — MainWindow wiring: validation on play, loop detection, picker ownership + human verify
 
 ## Progress
 
