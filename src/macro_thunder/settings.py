@@ -14,6 +14,9 @@ class AppSettings:
     hotkey_start_play: str = "<f6>"
     hotkey_stop_play: str = "<f8>"
     mouse_threshold_px: int = 3
+    click_mode: str = "separate"        # "separate" = down+up blocks, "combined" = single click block
+    hotkey_record_here: str = ""        # empty string = disabled; guarded in HotkeyManager
+    sound_cue_enabled: bool = False     # winsound.Beep on record start; off by default
 
     @classmethod
     def load(cls) -> "AppSettings":
