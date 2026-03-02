@@ -181,14 +181,14 @@ class MainWindow(QMainWindow):
             except queue.Empty:
                 break
             self._stop_play()
+            # Select first so the row is visible when the dialog closes
+            self._editor_panel.select_flat_index(flat_index)
             QMessageBox.warning(
                 self,
                 "Infinite Loop Detected",
                 f"Infinite loop detected at '{label_name}' — execution stopped.\n"
                 "Check your Goto blocks."
             )
-            # Select the offending Goto block in the editor
-            self._editor_panel.select_flat_index(flat_index)
 
     # ------------------------------------------------------------------
     # Recording slots

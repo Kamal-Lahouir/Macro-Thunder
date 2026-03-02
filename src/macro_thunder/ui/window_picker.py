@@ -50,6 +50,10 @@ class WindowPickerService(QObject):
 
         def on_click(x, y, button, pressed):
             if pressed:
+                if button == mouse.Button.right:
+                    self._listener = None
+                    self.cancelled.emit()
+                    return False  # stop listener
                 self._on_pick(x, y)
                 return False  # stop listener
 
