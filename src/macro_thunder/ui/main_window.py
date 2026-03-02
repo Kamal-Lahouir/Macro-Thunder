@@ -23,6 +23,7 @@ from macro_thunder.ui.settings_dialog import SettingsDialog
 from macro_thunder.ui.window_picker import WindowPickerService
 from macro_thunder.recorder import RecorderService
 from macro_thunder.engine import PlaybackEngine
+from macro_thunder.engine.validation import validate_gotos
 from macro_thunder.hotkeys import HotkeyManager
 from macro_thunder.settings import AppSettings, SETTINGS_DIR
 from macro_thunder.models.document import MacroDocument
@@ -54,7 +55,8 @@ class MainWindow(QMainWindow):
         self._splitter = QSplitter(Qt.Orientation.Horizontal)
 
         self._library_panel = LibraryPanel()
-        self._editor_panel = EditorPanel()
+        self._picker_service = WindowPickerService(self, parent=self)
+        self._editor_panel = EditorPanel(picker_service=self._picker_service)
 
         self._splitter.addWidget(self._library_panel)
         self._splitter.addWidget(self._editor_panel)
@@ -99,7 +101,6 @@ class MainWindow(QMainWindow):
         # Services
         self._rec_queue: queue.Queue = queue.Queue()
         self._recorder = RecorderService(self._rec_queue, self._settings.mouse_threshold_px)
-        self._engine = PlaybackEngine(on_progress=self._on_play_progress)
         self._macro_buffer: Optional[MacroDocument] = None
         self._state: AppState = AppState.IDLE
         self._rec_blocks: list = []
@@ -108,6 +109,14 @@ class MainWindow(QMainWindow):
         # Progress queue for thread-safe playback progress updates
         self._play_progress_queue: queue.Queue = queue.Queue()
 
+        # Loop detection queue for thread-safe loop detection notifications
+        self._loop_detect_queue: queue.Queue = queue.Queue()
+
+        self._engine = PlaybackEngine(
+            on_progress=self._on_play_progress,
+            on_loop_detected=self._on_loop_detected_callback,
+        )
+
         # Hotkey manager
         self._hotkeys = HotkeyManager(self)
         try:
@@ -115,10 +124,9 @@ class MainWindow(QMainWindow):
         except Exception as e:
             QMessageBox.warning(self, "Hotkey Error", str(e))
 
-        # Window picker service — minimize -> click -> restore -> fill
-        self._picker = WindowPickerService(self, parent=self)
-        self._picker.picked.connect(self._on_picker_picked)
-        self._picker.cancelled.connect(self._on_picker_cancelled)
+        # Connect picker signals (picker_service created in __init__ above the splitter)
+        self._picker_service.picked.connect(self._on_picker_picked)
+        self._picker_service.cancelled.connect(self._on_picker_cancelled)
 
         # Connect editor "Record Here" button
         self._editor_panel.record_here_requested.connect(self._start_record_here)
@@ -165,6 +173,22 @@ class MainWindow(QMainWindow):
             self._toolbar_widget.set_playback_progress(idx, total)
             if idx >= total:
                 self._stop_play()  # auto-reset when playback finishes
+
+        # Drain loop detection notifications
+        while not self._loop_detect_queue.empty():
+            try:
+                flat_index, label_name = self._loop_detect_queue.get_nowait()
+            except queue.Empty:
+                break
+            self._stop_play()
+            QMessageBox.warning(
+                self,
+                "Infinite Loop Detected",
+                f"Infinite loop detected at '{label_name}' — execution stopped.\n"
+                "Check your Goto blocks."
+            )
+            # Select the offending Goto block in the editor
+            self._editor_panel.select_flat_index(flat_index)
 
     # ------------------------------------------------------------------
     # Recording slots
@@ -230,6 +254,15 @@ class MainWindow(QMainWindow):
         if self._macro_buffer is None or not self._macro_buffer.blocks:
             QMessageBox.information(self, "No Macro", "Record or load a macro first.")
             return
+        missing = validate_gotos(self._macro_buffer.blocks)
+        if missing:
+            QMessageBox.critical(
+                self,
+                "Missing Labels",
+                "Cannot play: the following label names are not defined:\n"
+                + "\n".join(f"  \u2022 {m}" for m in missing),
+            )
+            return
         self._state = AppState.PLAYING
         self._toolbar_widget.set_playback(True)
         self._engine.start(self._macro_buffer.blocks, speed=speed, repeat=repeat)
@@ -242,6 +275,10 @@ class MainWindow(QMainWindow):
     def _on_play_progress(self, index: int, total: int) -> None:
         """Called from playback thread — put into queue, drain on main thread."""
         self._play_progress_queue.put((index, total))
+
+    def _on_loop_detected_callback(self, flat_index: int, label_name: str) -> None:
+        """Called from playback thread — put into queue, drain on main thread."""
+        self._loop_detect_queue.put((flat_index, label_name))
 
     # ------------------------------------------------------------------
     # File menu slots
@@ -316,3 +353,7 @@ class MainWindow(QMainWindow):
         """Runs on main thread via queued signal connection."""
         self.showNormal()
         self.activateWindow()
+
+    def closeEvent(self, event) -> None:
+        self._picker_service.cancel()
+        super().closeEvent(event)

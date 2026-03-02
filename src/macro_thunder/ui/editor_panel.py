@@ -177,6 +177,17 @@ class EditorPanel(QFrame):
             return row_obj.flat_index
         return -1
 
+    def select_flat_index(self, flat_index: int) -> None:
+        """Select the display row corresponding to flat_index."""
+        if self._model is None:
+            return
+        for display_row in range(self._model.rowCount()):
+            row_obj = self._model.display_row(display_row)
+            if isinstance(row_obj, BlockRow) and row_obj.flat_index == flat_index:
+                self._table.selectRow(display_row)
+                self._table.scrollTo(self._model.index(display_row, 0))
+                return
+
     def insert_blocks_at(self, flat_index: int, blocks: list) -> None:
         """Insert *blocks* after *flat_index* in the current model.
 
