@@ -20,6 +20,7 @@ from macro_thunder.ui.library_panel import LibraryPanel
 from macro_thunder.ui.editor_panel import EditorPanel
 from macro_thunder.ui.toolbar import ToolbarPanel
 from macro_thunder.ui.settings_dialog import SettingsDialog
+from macro_thunder.ui.window_picker import WindowPickerService
 from macro_thunder.recorder import RecorderService
 from macro_thunder.engine import PlaybackEngine
 from macro_thunder.hotkeys import HotkeyManager
@@ -113,6 +114,11 @@ class MainWindow(QMainWindow):
             self._hotkeys.register(self._settings)
         except Exception as e:
             QMessageBox.warning(self, "Hotkey Error", str(e))
+
+        # Window picker service — minimize -> click -> restore -> fill
+        self._picker = WindowPickerService(self, parent=self)
+        self._picker.picked.connect(self._on_picker_picked)
+        self._picker.cancelled.connect(self._on_picker_cancelled)
 
         # Connect editor "Record Here" button
         self._editor_panel.record_here_requested.connect(self._start_record_here)
@@ -294,3 +300,19 @@ class MainWindow(QMainWindow):
                 self._hotkeys.register(self._settings)
             except Exception as e:
                 QMessageBox.warning(self, "Hotkey Error", str(e))
+
+    # ------------------------------------------------------------------
+    # Window picker slots (main thread — safe to call Qt methods here)
+    # ------------------------------------------------------------------
+
+    def _on_picker_picked(self, exe: str, title: str) -> None:
+        """Runs on main thread via queued signal connection."""
+        self.showNormal()
+        self.activateWindow()
+        # Subclasses or future block panels can override or connect to _picker.picked
+        # directly to consume (exe, title) and populate a form field.
+
+    def _on_picker_cancelled(self) -> None:
+        """Runs on main thread via queued signal connection."""
+        self.showNormal()
+        self.activateWindow()
