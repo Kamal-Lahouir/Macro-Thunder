@@ -3,6 +3,7 @@ from __future__ import annotations
 import enum
 import pathlib
 import queue
+import sys
 from typing import Optional
 
 from PyQt6.QtWidgets import (
@@ -12,9 +13,11 @@ from PyQt6.QtWidgets import (
     QSplitter,
     QLabel,
     QToolBar,
+    QSystemTrayIcon,
+    QMenu,
 )
 from PyQt6.QtCore import Qt, QTimer
-from PyQt6.QtGui import QAction, QCursor
+from PyQt6.QtGui import QAction, QCursor, QColor, QPixmap, QIcon
 
 from macro_thunder.ui.library_panel import LibraryPanel
 from macro_thunder.ui.editor_panel import EditorPanel
@@ -138,6 +141,22 @@ class MainWindow(QMainWindow):
         except Exception as e:
             QMessageBox.warning(self, "Hotkey Error", str(e))
 
+        # System tray icon
+        self._tray_icon = QSystemTrayIcon(self)
+        self._tray_icon.setIcon(self._make_tray_icon("gray"))
+        self._tray_icon.setToolTip("Macro Thunder")
+        tray_menu = QMenu()
+        show_action = QAction("Show", self)
+        show_action.triggered.connect(self.showNormal)
+        show_action.triggered.connect(self.activateWindow)
+        quit_action = QAction("Quit", self)
+        quit_action.triggered.connect(self.close)
+        tray_menu.addAction(show_action)
+        tray_menu.addSeparator()
+        tray_menu.addAction(quit_action)
+        self._tray_icon.setContextMenu(tray_menu)
+        self._tray_icon.show()
+
         # Connect picker signals (picker_service created in __init__ above the splitter)
         self._picker_service.picked.connect(self._on_picker_picked)
         self._picker_service.cancelled.connect(self._on_picker_cancelled)
@@ -158,6 +177,7 @@ class MainWindow(QMainWindow):
             lambda: self._start_play(self._toolbar_widget._speed_spin.value(), 1)
         )
         self._hotkeys.stop_play.connect(self._stop_play)
+        self._hotkeys.record_here.connect(self._on_record_here_hotkey)
 
         # Recording drain timer (50ms / 20 Hz)
         self._rec_drain_timer = QTimer(self)
@@ -249,6 +269,8 @@ class MainWindow(QMainWindow):
         )
         mode_text = "Combined" if self._settings.click_mode == "combined" else "Separate"
         self._click_mode_label.setText(f"Click: {mode_text}")
+        self._tray_icon.setIcon(self._make_tray_icon("red"))
+        self._play_sound_cue()
         self._recorder.start()
         self._rec_drain_timer.start()
         self._toolbar_widget.set_recording(True, 0)
@@ -267,6 +289,8 @@ class MainWindow(QMainWindow):
         )
         mode_text = "Combined" if self._settings.click_mode == "combined" else "Separate"
         self._click_mode_label.setText(f"Click: {mode_text}")
+        self._tray_icon.setIcon(self._make_tray_icon("red"))
+        self._play_sound_cue()
         self._recorder.start()
         self._rec_drain_timer.start()
         self._toolbar_widget.set_recording(True, 0)
@@ -276,6 +300,7 @@ class MainWindow(QMainWindow):
             return
         self._recorder.stop()
         self._click_mode_label.setText("")
+        self._tray_icon.setIcon(self._make_tray_icon("gray"))
         self._rec_drain_timer.stop()
         self._drain_recorder()  # drain remaining events
         self._state = AppState.IDLE
@@ -400,6 +425,28 @@ class MainWindow(QMainWindow):
     def _on_library_load(self, path: str) -> None:
         doc = load_macro(pathlib.Path(path))
         self._load_document(doc)
+
+    @staticmethod
+    def _make_tray_icon(color: str) -> QIcon:
+        """Create a 16x16 solid-color tray icon."""
+        px = QPixmap(16, 16)
+        px.fill(QColor(color))
+        return QIcon(px)
+
+    def _on_record_here_hotkey(self) -> None:
+        """Triggered by global Record Here hotkey — starts recording at selected position."""
+        flat_index = self._editor_panel.get_selected_flat_index()
+        self._start_record_here(flat_index)
+
+    def _play_sound_cue(self) -> None:
+        """Play a short beep if sound_cue_enabled. Windows only; silently skipped elsewhere."""
+        if not self._settings.sound_cue_enabled:
+            return
+        try:
+            import winsound
+            winsound.Beep(880, 120)
+        except Exception:
+            pass
 
     def _open_settings(self) -> None:
         dlg = SettingsDialog(self._settings, self)

@@ -21,6 +21,7 @@ class HotkeyManager(QObject):
     stop_record = pyqtSignal()
     start_play = pyqtSignal()
     stop_play = pyqtSignal()
+    record_here = pyqtSignal()
 
     def __init__(self, parent: Optional[QObject] = None) -> None:
         super().__init__(parent)
@@ -44,6 +45,8 @@ class HotkeyManager(QObject):
             settings.hotkey_start_play: lambda: q.put("start_play"),
             settings.hotkey_stop_play: lambda: q.put("stop_play"),
         }
+        if settings.hotkey_record_here:
+            hotkey_map[settings.hotkey_record_here] = lambda: q.put("record_here")
 
         listener = keyboard.GlobalHotKeys(hotkey_map)
         listener.daemon = True
@@ -71,3 +74,5 @@ class HotkeyManager(QObject):
                 self.start_play.emit()
             elif action == "stop_play":
                 self.stop_play.emit()
+            elif action == "record_here":
+                self.record_here.emit()

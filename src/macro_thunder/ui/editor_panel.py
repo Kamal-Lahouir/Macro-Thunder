@@ -71,7 +71,7 @@ class EditorPanel(QFrame):
 
         # --- Detail panel container (shown below table on single block selection) ---
         self._detail_container = QWidget()
-        self._detail_container.setMaximumHeight(220)
+        self._detail_container.setMaximumHeight(360)
         self._detail_layout = QVBoxLayout(self._detail_container)
         self._detail_layout.setContentsMargins(0, 0, 0, 0)
         self._detail_container.hide()
@@ -157,6 +157,13 @@ class EditorPanel(QFrame):
         """Emit record_here_requested with the flat index after current selection."""
         flat_index = self._selected_flat_end_index()
         self.record_here_requested.emit(flat_index)
+
+    def get_selected_flat_index(self) -> int:
+        """Return flat block index of the last selected row, or -1 (append at end).
+
+        Public API used by MainWindow for Record Here hotkey.
+        """
+        return self._selected_flat_end_index()
 
     def _selected_flat_end_index(self) -> int:
         """Return flat block index of the last selected row, or -1 (append at end)."""
