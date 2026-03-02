@@ -46,6 +46,7 @@ Progress: [███████░░░] 70%
 | Phase 03-visual-block-editor P03 | 4min | 2 tasks | 3 files |
 | Phase 03-visual-block-editor P05 | 5min | 1 tasks | 1 files |
 | Phase 03-visual-block-editor P06 | 5min | 1 tasks | 1 files |
+| Phase 04-flow-control-and-window-management P02 | 2 min | 1 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -78,6 +79,7 @@ Recent decisions affecting current work:
 - [Phase 03-visual-block-editor]: UserRole branch added to BlockTableModel.data() to expose DisplayRow objects to delegate without coupling
 - [Phase 03-visual-block-editor]: EditorPanel buttons disabled until load_document() called; clearSelection() before delete_rows for UI consistency
 - [Phase 03-visual-block-editor]: _load_document() central helper: all load paths (file open, library, record stop) funnel through single method for consistent dirty-reset, editor update, block count
+- [Phase 04-02]: All new WindowFocusBlock fields use defaults for backwards-compatible deserialization
 
 ### Pending Todos
 
