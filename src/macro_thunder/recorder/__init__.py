@@ -32,15 +32,21 @@ class RecorderService:
         Moves smaller than this value are discarded. Default: 3.
     """
 
+    # Sentinel value put into the event queue when the stop hotkey is pressed
+    # inside the recording listener itself (bypasses GlobalHotKeys chain).
+    STOP_SENTINEL = "__STOP__"
+
     def __init__(
         self,
         event_queue: queue.Queue,
         pixel_threshold: int = 3,
         click_mode: str = "separate",
+        stop_hotkey: str = "",
     ) -> None:
         self._queue = event_queue
         self._threshold = pixel_threshold
         self._click_mode = click_mode
+        self._stop_hotkey_str = stop_hotkey  # e.g. "<f8>" or "<ctrl>+a"
         self._record_start: float = 0.0
         self._last_move_x: Optional[int] = None
         self._last_move_y: Optional[int] = None
@@ -146,11 +152,37 @@ class RecorderService:
         self._queue.put(MouseScrollBlock(x=x, y=y, dx=dx, dy=dy, timestamp=ts))
 
     def _on_press(self, key: keyboard.Key | keyboard.KeyCode) -> None:
+        # Check if this key matches the stop hotkey before recording it.
+        # This is a direct fallback in case the GlobalHotKeys chain is broken
+        # (e.g., by another app's low-level keyboard hook).
+        if self._stop_hotkey_str and self._matches_stop_hotkey(key):
+            self._queue.put(self.STOP_SENTINEL)
+            return  # don't record the stop key itself
+
         ts = time.perf_counter() - self._record_start
         if self._click_mode == "combined":
             self._queue.put(KeyPressBlock(key=self._key_to_str(key), direction="key", timestamp=ts))
         else:
             self._queue.put(KeyPressBlock(key=self._key_to_str(key), direction="down", timestamp=ts))
+
+    def _matches_stop_hotkey(self, key: keyboard.Key | keyboard.KeyCode) -> bool:
+        """Return True if *key* is the final (non-modifier) key of the stop hotkey.
+
+        We only check the primary key here, not the full modifier combination,
+        because pynput fires _on_press once per individual key. The correct
+        multi-key check is handled by GlobalHotKeys; this is only a fallback
+        for when that chain fails.
+        """
+        if not self._stop_hotkey_str:
+            return False
+        # Extract the last token after '+' stripping angle brackets
+        last_token = self._stop_hotkey_str.split("+")[-1].strip("<>").lower()
+        key_str = self._key_to_str(key).lower()
+        # Map pynput key names to bare names for comparison
+        # e.g. "Key.f8" -> "f8", "a" -> "a"
+        if key_str.startswith("key."):
+            key_str = key_str[4:]
+        return key_str == last_token
 
     def _on_release(self, key: keyboard.Key | keyboard.KeyCode) -> None:
         if self._click_mode == "combined":

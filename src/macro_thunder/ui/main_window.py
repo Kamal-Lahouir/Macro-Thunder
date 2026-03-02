@@ -146,12 +146,16 @@ class MainWindow(QMainWindow):
         self._tray_icon.setIcon(self._make_tray_icon("gray"))
         self._tray_icon.setToolTip("Macro Thunder")
         tray_menu = QMenu()
-        show_action = QAction("Show", self)
-        show_action.triggered.connect(self.showNormal)
-        show_action.triggered.connect(self.activateWindow)
+        self._tray_show_action = QAction("Show", self)
+        self._tray_show_action.triggered.connect(self.showNormal)
+        self._tray_show_action.triggered.connect(self.activateWindow)
+        self._tray_stop_record_action = QAction("⏹ Stop Recording", self)
+        self._tray_stop_record_action.triggered.connect(self._stop_record)
+        self._tray_stop_record_action.setVisible(False)
         quit_action = QAction("Quit", self)
         quit_action.triggered.connect(self.close)
-        tray_menu.addAction(show_action)
+        tray_menu.addAction(self._tray_show_action)
+        tray_menu.addAction(self._tray_stop_record_action)
         tray_menu.addSeparator()
         tray_menu.addAction(quit_action)
         self._tray_icon.setContextMenu(tray_menu)
@@ -258,30 +262,13 @@ class MainWindow(QMainWindow):
             return
         if not self._confirm_discard():
             return
-        self._append_after_flat = -2  # replace mode
-        self._state = AppState.RECORDING
-        self._rec_blocks = []
-        # Recreate recorder with current settings so click_mode is always fresh
-        self._recorder = RecorderService(
-            self._rec_queue,
-            self._settings.mouse_threshold_px,
-            click_mode=self._settings.click_mode,
-        )
-        mode_text = "Combined" if self._settings.click_mode == "combined" else "Separate"
-        self._click_mode_label.setText(f"Click: {mode_text}")
-        self._tray_icon.setIcon(self._make_tray_icon("red"))
-        self._play_sound_cue()
-        self._recorder.start()
-        self._rec_drain_timer.start()
-        self._toolbar_widget.set_recording(True, 0)
+        self._start_recording_common(append_after=-2)
 
     def _start_record_here(self, flat_index: int) -> None:
         """Start recording in append mode — new blocks inserted after flat_index."""
         if self._state != AppState.IDLE:
             return
         if self._macro_buffer is None:
-            # No document open — show error and bail.
-            # Use tray message so this works even when the window is not in focus.
             self._tray_icon.showMessage(
                 "Record Here",
                 "No macro is open. Open or record a macro first.",
@@ -289,17 +276,24 @@ class MainWindow(QMainWindow):
                 3000,
             )
             return
-        self._append_after_flat = flat_index  # >= -1: append mode
+        self._start_recording_common(append_after=flat_index)
+
+    def _start_recording_common(self, append_after: int) -> None:
+        """Shared recording start logic for both record and record-here paths."""
+        self._append_after_flat = append_after
         self._state = AppState.RECORDING
         self._rec_blocks = []
         self._recorder = RecorderService(
             self._rec_queue,
             self._settings.mouse_threshold_px,
             click_mode=self._settings.click_mode,
+            stop_hotkey=self._settings.hotkey_stop_record,
         )
         mode_text = "Combined" if self._settings.click_mode == "combined" else "Separate"
         self._click_mode_label.setText(f"Click: {mode_text}")
         self._tray_icon.setIcon(self._make_tray_icon("red"))
+        self._tray_show_action.setVisible(False)
+        self._tray_stop_record_action.setVisible(True)
         self._play_sound_cue()
         self._recorder.start()
         self._rec_drain_timer.start()
@@ -311,6 +305,8 @@ class MainWindow(QMainWindow):
         self._recorder.stop()
         self._click_mode_label.setText("")
         self._tray_icon.setIcon(self._make_tray_icon("gray"))
+        self._tray_stop_record_action.setVisible(False)
+        self._tray_show_action.setVisible(True)
         self._rec_drain_timer.stop()
         self._drain_recorder()  # drain remaining events
         self._state = AppState.IDLE
@@ -332,11 +328,16 @@ class MainWindow(QMainWindow):
         self._append_after_flat = -2
 
     def _drain_recorder(self) -> None:
+        from macro_thunder.recorder import RecorderService
         while not self._rec_queue.empty():
             try:
                 block = self._rec_queue.get_nowait()
             except queue.Empty:
                 break
+            if block is RecorderService.STOP_SENTINEL or block == RecorderService.STOP_SENTINEL:
+                # Stop hotkey detected directly inside the recording listener.
+                self._stop_record()
+                return
             self._rec_blocks.append(block)
             self._toolbar_widget.update_block_count(len(self._rec_blocks))
 
