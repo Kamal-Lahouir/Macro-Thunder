@@ -85,7 +85,7 @@ Plans:
 - [ ] 04-03-PLAN.md — Engine refactor: while-loop playback with Label/Goto/WindowFocus dispatch
 - [ ] 04-04-PLAN.md — Label/Goto visual styling + WindowPickerService
 - [ ] 04-05-PLAN.md — Block detail panels: LabelPanel, GotoPanel, WindowFocusPanel + EditorPanel wiring
-- [ ] 04-06-PLAN.md — MainWindow wiring: validation on play, loop detection, picker ownership + human verify
+- [x] 04-06-PLAN.md — MainWindow wiring: validation on play, loop detection, picker ownership + human verify
 
 ## Progress
 
@@ -97,4 +97,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | 1. Foundation | 3/3 | Complete   | 2026-02-26 |
 | 2. Record and Play | 4/4 | Complete   | 2026-02-28 |
 | 3. Visual Block Editor | 6/6 | Complete   | 2026-03-01 |
-| 4. Flow Control and Window Management | 5/6 | In Progress|  |
+| 4. Flow Control and Window Management | 6/6 | Complete   | 2026-03-02 |
