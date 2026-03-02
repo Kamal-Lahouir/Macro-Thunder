@@ -13,8 +13,8 @@ Four phases, each delivering a coherent and independently verifiable capability.
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Foundation** - App shell, data model, DPI awareness, and correct threading architecture (completed 2026-02-26)
-- [x] **Phase 2: Record and Play** - Full recording pipeline and playback engine — first end-to-end working macro (completed 2026-02-28)
-- [x] **Phase 3: Visual Block Editor** - QAbstractTableModel block editor with movement grouping and group duration editing (completed 2026-03-01)
+- [x] **Phase 2: Record and Play** - Full recording pipeline and playback engine — first end-to-end working macro (completed 2026-02-28)
+- [x] **Phase 3: Visual Block Editor** - QAbstractTableModel block editor with movement grouping and group duration editing (completed 2026-03-01)
 - [ ] **Phase 4: Flow Control and Window Management** - Label/Goto flow control and Window Focus action with interactive window picker
 
 ## Phase Details
@@ -94,7 +94,57 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation | 3/3 | Complete   | 2026-02-26 |
-| 2. Record and Play | 4/4 | Complete   | 2026-02-28 |
-| 3. Visual Block Editor | 6/6 | Complete   | 2026-03-01 |
-| 4. Flow Control and Window Management | 6/6 | Complete   | 2026-03-02 |
+| 1. Foundation | 3/3 | Complete | 2026-02-26 |
+| 2. Record and Play | 4/4 | Complete | 2026-02-28 |
+| 3. Visual Block Editor | 6/6 | Complete | 2026-03-01 |
+| 4. Flow Control and Window Management | 6/6 | Complete | 2026-03-02 |
+| 5. Record Logic Adaptation and Fixes | 0/4 | Not started | - |
+| 6. UI Enhancements for User Friendly | 0/TBD | Not started | - |
+
+### Phase 5: Record Logic Adaptation and Fixes
+
+**Goal**: Recording is more flexible and playback is more powerful — users can choose how clicks are recorded and can run macros a set number of times or infinitely
+**Depends on**: Phase 4
+**Plans**: 4 plans
+
+Scope:
+- **Click recording modes** (toggle before recording):
+  - Mode 1 (combined): Left/right click = single `MouseClick` action (no separate press/release blocks)
+  - Mode 2 (current): Records `MouseButtonDown` + `MouseButtonUp` as separate blocks
+- **Repeat count**: Playback can run macro N times (integer) or infinitely (loop until Stop hotkey)
+- **Record Here hotkey**: Global hotkey to trigger "Record Here" without UI focus
+- Settings/AppSettings updated to persist click mode and repeat preferences
+
+**Success Criteria** (what must be TRUE):
+  1. User can toggle click mode in Settings before recording; Mode 1 produces one block per click, Mode 2 produces two (current behavior preserved)
+  2. User can set repeat count to N — macro plays exactly N times then stops
+  3. User can enable infinite loop — macro repeats until Stop hotkey is pressed
+  4. Record Here hotkey triggers insert-recording at the selected block position even when another app has focus
+
+Plans:
+- [ ] 05-01-PLAN.md — AppSettings extension + SettingsDialog restructure (QTabWidget, hotkey conflict detection, top-level Settings menu)
+- [ ] 05-02-PLAN.md — Click recording mode in RecorderService + direction='click' dispatch in engine + status bar indicator
+- [ ] 05-03-PLAN.md — Repeat count spinbox + infinite loop checkbox in toolbar + PlaybackEngine while-True loop with on_done callback
+- [ ] 05-04-PLAN.md — Record Here global hotkey + system tray icon (gray/red) + sound cue + EditorPanel.get_selected_flat_index
+
+### Phase 6: UI Enhancements for User Friendly
+
+**Goal**: The interface is polished, stable, and configurable — hotkeys are set by pressing a key (not typing), the toolbar does not shift layout during recording, and the user can customize the app's visual theme
+**Depends on**: Phase 5
+**Plans**: TBD
+
+Scope:
+- **Hotkey capture UI**: Button next to each hotkey field — click it, press any key, that key is set as the hotkey (replaces manual `<f9>` text entry)
+- **Repeat count UI**: Spinbox in the toolbar to set how many times to play (1 to N, or ∞ toggle)
+- **Click mode UI**: Visible toggle/indicator in the toolbar or settings to switch Mode 1 / Mode 2
+- **Toolbar stability**: The recording blink indicator and block count label should not shift other controls when they appear/disappear — use reserved space or fixed-position overlay
+- **Theme/color customization**: Settings panel with theme options (dark, light, accent color, or preset themes)
+
+**Success Criteria** (what must be TRUE):
+  1. User clicks a hotkey capture button, presses a key, and the field is filled — no manual typing required
+  2. Toolbar layout does not shift when recording starts/stops (blink dot and block count appear in-place without pushing other controls)
+  3. User can set repeat count directly from the toolbar before pressing Play
+  4. User can switch theme/color scheme from Settings and the change applies immediately without restart
+
+Plans:
+- [ ] TBD (run /gsd:plan-phase 6 to break down)
