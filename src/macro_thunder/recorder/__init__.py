@@ -52,6 +52,9 @@ class RecorderService:
         self._last_move_y: Optional[int] = None
         self._mouse_listener: Optional[mouse.Listener] = None
         self._kb_listener: Optional[keyboard.Listener] = None
+        # Keys physically held at recording start (hotkey residue).
+        # Their first release is silently skipped; they're recorded normally thereafter.
+        self._held_at_start: set = set()
 
     # ------------------------------------------------------------------
     # Public API
@@ -69,6 +72,13 @@ class RecorderService:
         self._record_start = record_start_time if record_start_time is not None else time.perf_counter()
         self._last_move_x = None
         self._last_move_y = None
+
+        # Snapshot which keys are physically held right now so we can discard
+        # their residue releases (e.g. hotkey modifiers still held when recording starts).
+        try:
+            self._held_at_start = set(keyboard.Controller().pressed_keys)
+        except Exception:
+            self._held_at_start = set()
 
         self._mouse_listener = mouse.Listener(
             on_move=self._on_move,
@@ -152,9 +162,12 @@ class RecorderService:
         self._queue.put(MouseScrollBlock(x=x, y=y, dx=dx, dy=dy, timestamp=ts))
 
     def _on_press(self, key: keyboard.Key | keyboard.KeyCode) -> None:
-        # Check if this key matches the stop hotkey before recording it.
-        # This is a direct fallback in case the GlobalHotKeys chain is broken
-        # (e.g., by another app's low-level keyboard hook).
+        # If this key was held before recording started (hotkey residue), it has
+        # now been released and re-pressed — clear it from the held set and record
+        # it as intentional from this point onward.
+        self._held_at_start.discard(key)
+
+        # Direct stop-hotkey fallback in case the GlobalHotKeys chain is broken.
         if self._stop_hotkey_str and self._matches_stop_hotkey(key):
             self._queue.put(self.STOP_SENTINEL)
             return  # don't record the stop key itself
@@ -185,6 +198,12 @@ class RecorderService:
         return key_str == last_token
 
     def _on_release(self, key: keyboard.Key | keyboard.KeyCode) -> None:
+        # Silently drop the release of any key that was physically held when
+        # recording started (hotkey modifier/trigger residue, not intentional input).
+        if key in self._held_at_start:
+            self._held_at_start.discard(key)
+            return
+
         if self._click_mode == "combined":
             return  # suppress release — combined mode emits a single "key" block on press
         ts = time.perf_counter() - self._record_start
