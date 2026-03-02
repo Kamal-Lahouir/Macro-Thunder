@@ -48,6 +48,7 @@ Progress: [████████░░] 80%
 | Phase 03-visual-block-editor P06 | 5min | 1 tasks | 1 files |
 | Phase 04-flow-control-and-window-management P02 | 2 min | 1 tasks | 1 files |
 | Phase 04-flow-control-and-window-management P01 | 2 min | 2 tasks | 4 files |
+| Phase 04-flow-control-and-window-management P03 | 5min | 1 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -82,6 +83,7 @@ Recent decisions affecting current work:
 - [Phase 03-visual-block-editor]: _load_document() central helper: all load paths (file open, library, record stop) funnel through single method for consistent dirty-reset, editor update, block count
 - [Phase 04-02]: All new WindowFocusBlock fields use defaults for backwards-compatible deserialization
 - [Phase 04-flow-control-and-window-management]: _title_matches extracted as pure helper for unit testability; unknown match_mode falls back to Contains
+- [Phase 04-flow-control-and-window-management]: GotoBlock loop detection threshold is 1000 fires without non-flow progress; on_loop_detected signals UI via callback (queue bridge in Plan 06)
 
 ### Pending Todos
 

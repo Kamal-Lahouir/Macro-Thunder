@@ -47,8 +47,8 @@
 
 ### Flow Control
 
-- [ ] **FLOW-01**: User can insert a Label block (named jump target) anywhere in the macro
-- [ ] **FLOW-02**: User can insert a Goto block that jumps execution to any label
+- [x] **FLOW-01**: User can insert a Label block (named jump target) anywhere in the macro
+- [x] **FLOW-02**: User can insert a Goto block that jumps execution to any label
 - [x] **FLOW-03**: Playback executor validates all Goto targets exist before execution begins (no mid-run crashes)
 - [x] **FLOW-04**: Infinite loop detection — executor detects goto loops with no progress and surfaces a warning
 
@@ -57,7 +57,7 @@
 - [x] **WIN-01**: User can insert a Window Focus action block specifying target executable name and window title
 - [x] **WIN-02**: Window title matching supports three modes: Contains, Exact, Starts With
 - [ ] **WIN-03**: User can use an interactive "Select Window..." picker — click on a running window to fill the fields
-- [ ] **WIN-04**: On success: optionally set window position (X, Y) and size (W, H)
+- [x] **WIN-04**: On success: optionally set window position (X, Y) and size (W, H)
 - [x] **WIN-05**: On success: flow continues to "Next" or a named label
 - [x] **WIN-06**: On failure: wait N seconds, then jump to a named label (e.g. End)
 
@@ -139,14 +139,14 @@ Updated during roadmap creation.
 | LIB-01 | Phase 3 | Complete |
 | LIB-02 | Phase 3 | Complete |
 | LIB-03 | Phase 3 | Complete |
-| FLOW-01 | Phase 4 | Pending |
-| FLOW-02 | Phase 4 | Pending |
+| FLOW-01 | Phase 4 | Complete |
+| FLOW-02 | Phase 4 | Complete |
 | FLOW-03 | Phase 4 | Complete |
 | FLOW-04 | Phase 4 | Complete |
 | WIN-01 | Phase 4 | Complete |
 | WIN-02 | Phase 4 | Complete |
 | WIN-03 | Phase 4 | Pending |
-| WIN-04 | Phase 4 | Pending |
+| WIN-04 | Phase 4 | Complete |
 | WIN-05 | Phase 4 | Complete |
 | WIN-06 | Phase 4 | Complete |
 
