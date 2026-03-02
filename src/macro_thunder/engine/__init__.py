@@ -80,34 +80,34 @@ class PlaybackEngine:
         """Main playback loop. Runs on background thread."""
         for _ in range(repeat):
             t0 = time.perf_counter()
-            extra_delay = 0.0  # accumulated seconds added by DelayBlocks
+            # virtual_time: monotonically-increasing playback clock (recording seconds).
+            # Advances by each block's recorded gap from the previous block, plus any
+            # DelayBlock durations. Using gaps (not raw timestamps) means manually
+            # inserted blocks (timestamp=0) or appended recordings (timestamps restart
+            # from 0) fire immediately after the previous block rather than jumping
+            # back in time.
+            virtual_time = 0.0
+            prev_ts = 0.0  # recording timestamp of the last real block seen
+
             for i, block in enumerate(blocks):
                 if self._stop_event.is_set():
                     return
 
                 if isinstance(block, DelayBlock):
-                    # Spin-wait for the delay duration, then accumulate the offset
-                    target = time.perf_counter() + block.duration / speed
-                    remaining = target - time.perf_counter()
-                    if remaining > 0.002:
-                        time.sleep(remaining - 0.002)
-                    while time.perf_counter() < target:
-                        pass
-                    extra_delay += block.duration / speed
-                    self._dispatch(block)
-                    if self._on_progress is not None:
-                        self._on_progress(i + 1, len(blocks))
-                    continue
+                    virtual_time += block.duration
+                    target = t0 + virtual_time / speed
+                else:
+                    ts = block.timestamp  # type: ignore[union-attr]
+                    if ts > prev_ts:
+                        virtual_time += ts - prev_ts
+                    # else: out-of-order / manually inserted block — fire immediately
+                    # after the previous one (no gap added)
+                    prev_ts = ts
+                    target = t0 + virtual_time / speed
 
-                # Compute absolute target time for this block
-                target = t0 + block.timestamp / speed + extra_delay  # type: ignore[union-attr]
-
-                # Coarse sleep to avoid busy-waiting for most of the delay
                 remaining = target - time.perf_counter()
                 if remaining > 0.002:
                     time.sleep(remaining - 0.002)
-
-                # Spin-wait for precision
                 while time.perf_counter() < target:
                     pass
 
