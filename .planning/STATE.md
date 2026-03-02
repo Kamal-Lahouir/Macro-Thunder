@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-25)
 
 **Core value:** Exact mouse movement replay with a non-painful editor — record once, tune the timing, loop it.
-**Current focus:** Phase 3 — Visual Block Editor
+**Current focus:** Phase 4 — Flow Control and Window Management
 
 ## Current Position
 
-Phase: 3 of 4 (Visual Block Editor)
-Plan: 4 of 4 in current phase
+Phase: 4 of 4 (Flow Control and Window Management)
+Plan: 1 of 6 in current phase
 Status: In Progress
-Last activity: 2026-03-01 — Plan 03-04 complete (LibraryPanel + rename_macro)
+Last activity: 2026-03-02 — Plan 04-01 complete (validate_gotos + window_utils TDD)
 
-Progress: [███████░░░] 70%
+Progress: [████████░░] 80%
 
 ## Performance Metrics
 
@@ -47,6 +47,7 @@ Progress: [███████░░░] 70%
 | Phase 03-visual-block-editor P05 | 5min | 1 tasks | 1 files |
 | Phase 03-visual-block-editor P06 | 5min | 1 tasks | 1 files |
 | Phase 04-flow-control-and-window-management P02 | 2 min | 1 tasks | 1 files |
+| Phase 04-flow-control-and-window-management P01 | 2 min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -80,6 +81,7 @@ Recent decisions affecting current work:
 - [Phase 03-visual-block-editor]: EditorPanel buttons disabled until load_document() called; clearSelection() before delete_rows for UI consistency
 - [Phase 03-visual-block-editor]: _load_document() central helper: all load paths (file open, library, record stop) funnel through single method for consistent dirty-reset, editor update, block count
 - [Phase 04-02]: All new WindowFocusBlock fields use defaults for backwards-compatible deserialization
+- [Phase 04-flow-control-and-window-management]: _title_matches extracted as pure helper for unit testability; unknown match_mode falls back to Contains
 
 ### Pending Todos
 
@@ -93,6 +95,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-01
-Stopped at: Completed 03-01-PLAN.md — Rescaling Logic + DisplayRow Types
+Last session: 2026-03-02
+Stopped at: Completed 04-01-PLAN.md — validation.py + window_utils.py
 Resume file: .planning/phases/03-visual-block-editor/03-01-SUMMARY.md

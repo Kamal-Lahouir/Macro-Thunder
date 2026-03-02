@@ -49,17 +49,17 @@
 
 - [ ] **FLOW-01**: User can insert a Label block (named jump target) anywhere in the macro
 - [ ] **FLOW-02**: User can insert a Goto block that jumps execution to any label
-- [ ] **FLOW-03**: Playback executor validates all Goto targets exist before execution begins (no mid-run crashes)
-- [ ] **FLOW-04**: Infinite loop detection — executor detects goto loops with no progress and surfaces a warning
+- [x] **FLOW-03**: Playback executor validates all Goto targets exist before execution begins (no mid-run crashes)
+- [x] **FLOW-04**: Infinite loop detection — executor detects goto loops with no progress and surfaces a warning
 
 ### Window Focus Action
 
 - [x] **WIN-01**: User can insert a Window Focus action block specifying target executable name and window title
-- [ ] **WIN-02**: Window title matching supports three modes: Contains, Exact, Starts With
+- [x] **WIN-02**: Window title matching supports three modes: Contains, Exact, Starts With
 - [ ] **WIN-03**: User can use an interactive "Select Window..." picker — click on a running window to fill the fields
 - [ ] **WIN-04**: On success: optionally set window position (X, Y) and size (W, H)
-- [ ] **WIN-05**: On success: flow continues to "Next" or a named label
-- [ ] **WIN-06**: On failure: wait N seconds, then jump to a named label (e.g. End)
+- [x] **WIN-05**: On success: flow continues to "Next" or a named label
+- [x] **WIN-06**: On failure: wait N seconds, then jump to a named label (e.g. End)
 
 ### Macro Library
 
@@ -141,14 +141,14 @@ Updated during roadmap creation.
 | LIB-03 | Phase 3 | Complete |
 | FLOW-01 | Phase 4 | Pending |
 | FLOW-02 | Phase 4 | Pending |
-| FLOW-03 | Phase 4 | Pending |
-| FLOW-04 | Phase 4 | Pending |
+| FLOW-03 | Phase 4 | Complete |
+| FLOW-04 | Phase 4 | Complete |
 | WIN-01 | Phase 4 | Complete |
-| WIN-02 | Phase 4 | Pending |
+| WIN-02 | Phase 4 | Complete |
 | WIN-03 | Phase 4 | Pending |
 | WIN-04 | Phase 4 | Pending |
-| WIN-05 | Phase 4 | Pending |
-| WIN-06 | Phase 4 | Pending |
+| WIN-05 | Phase 4 | Complete |
+| WIN-06 | Phase 4 | Complete |
 
 **Coverage:**
 - v1 requirements: 36 total
