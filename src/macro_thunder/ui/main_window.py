@@ -283,6 +283,13 @@ class MainWindow(QMainWindow):
         self._append_after_flat = append_after
         self._state = AppState.RECORDING
         self._rec_blocks = []
+        # Purge any stale items (including STOP_SENTINELs from previous sessions)
+        # so a leftover sentinel doesn't immediately stop the new recording.
+        while not self._rec_queue.empty():
+            try:
+                self._rec_queue.get_nowait()
+            except queue.Empty:
+                break
         self._recorder = RecorderService(
             self._rec_queue,
             self._settings.mouse_threshold_px,
@@ -303,13 +310,15 @@ class MainWindow(QMainWindow):
         if self._state != AppState.RECORDING:
             return
         self._recorder.stop()
+        self._rec_drain_timer.stop()
+        # Set IDLE *before* draining so that any STOP_SENTINEL still in the queue
+        # causes _stop_record to return immediately instead of re-entering.
+        self._state = AppState.IDLE
+        self._drain_recorder()  # drain remaining real blocks (sentinel now harmless)
         self._click_mode_label.setText("")
         self._tray_icon.setIcon(self._make_tray_icon("gray"))
         self._tray_stop_record_action.setVisible(False)
         self._tray_show_action.setVisible(True)
-        self._rec_drain_timer.stop()
-        self._drain_recorder()  # drain remaining events
-        self._state = AppState.IDLE
         self._toolbar_widget.set_recording(False)
         if self._append_after_flat >= -1 and self._macro_buffer is not None:
             # Append mode: insert new blocks into existing document
