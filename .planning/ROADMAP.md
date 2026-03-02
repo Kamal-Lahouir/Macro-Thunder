@@ -98,7 +98,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | 2. Record and Play | 4/4 | Complete | 2026-02-28 |
 | 3. Visual Block Editor | 6/6 | Complete | 2026-03-01 |
 | 4. Flow Control and Window Management | 6/6 | Complete | 2026-03-02 |
-| 5. Record Logic Adaptation and Fixes | 0/4 | Not started | - |
+| 5. Record Logic Adaptation and Fixes | 1/4 | In Progress|  |
 | 6. UI Enhancements for User Friendly | 0/TBD | Not started | - |
 
 ### Phase 5: Record Logic Adaptation and Fixes

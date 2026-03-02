@@ -52,6 +52,7 @@ Progress: [██████████] 100%
 | Phase 04-flow-control-and-window-management P04 | 70s | 2 tasks | 3 files |
 | Phase 04-flow-control-and-window-management P05 | 4 min | 2 tasks | 2 files |
 | Phase 04-flow-control-and-window-management P06 | 30 min | 2 tasks | 5 files |
+| Phase 05-record-logic-adaptation-and-fixes P01 | 7 min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -93,6 +94,9 @@ Recent decisions affecting current work:
 - [Phase 04-flow-control-and-window-management 04-06]: validate_gotos called in _start_play before engine.start(); missing labels shown in QMessageBox, playback blocked
 - [Phase 04-flow-control-and-window-management 04-06]: WindowPickerService owned by MainWindow; closeEvent calls cancel() to stop pynput listener before Qt teardown
 - [Phase 04-flow-control-and-window-management 04-06]: LabelBlock excluded from non-flow progress counter so loop detection is not defeated by Label blocks in the loop
+- [Phase 05-record-logic-adaptation-and-fixes]: click_mode default is 'separate' to preserve existing behavior for all current users
+- [Phase 05-record-logic-adaptation-and-fixes]: hotkey_record_here stored as empty string when disabled — HotkeyManager must guard against registering empty string
+- [Phase 05-record-logic-adaptation-and-fixes]: Settings menu moved to top-level for discoverability and to separate it from File operations
 
 ### Roadmap Evolution
 
