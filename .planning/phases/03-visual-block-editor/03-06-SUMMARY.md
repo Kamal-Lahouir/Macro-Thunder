@@ -96,3 +96,14 @@ None — no external service configuration required.
 ---
 *Phase: 03-visual-block-editor*
 *Completed: 2026-03-01*
+
+## Deviations / Bug fixes (landed during checkpoint testing)
+
+All bugs discovered during the 13-step human verification — fixed and committed before approval.
+
+| Commit | Fix |
+|--------|-----|
+| bda1f91 | DelayBlock crash in playback engine (`timestamp` attr missing); added "Record Here" append-mode feature |
+| 7cef92b | DelayBlock inline edit — EditRole returns bare number (no "s"); `copy.copy` for fresh block instances |
+| 5339514 | `setData` emits `dataChanged` not `beginResetModel` (eliminated commitData Qt warning); 15 pytest-qt UI tests added |
+| 8a2ea5a | Engine virtual clock: gap-based timing instead of raw timestamps — fixes out-of-order/zero-ts blocks firing instantly after delay |
