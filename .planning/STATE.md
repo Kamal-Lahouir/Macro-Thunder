@@ -5,14 +5,14 @@
 See: .planning/PROJECT.md (updated 2026-02-25)
 
 **Core value:** Exact mouse movement replay with a non-painful editor — record once, tune the timing, loop it.
-**Current focus:** Phase 4 — Flow Control and Window Management
+**Current focus:** Phase 5 — Record Logic Adaptation and Fixes
 
 ## Current Position
 
-Phase: 4 of 4 (Flow Control and Window Management)
-Plan: 6 of 6 in current phase
-Status: Complete
-Last activity: 2026-03-02 — Plan 04-06 complete (MainWindow integration: validation, loop detection, picker service)
+Phase: 5 of 5 (Record Logic Adaptation and Fixes)
+Plan: 3 of 4 in current phase
+Status: In Progress
+Last activity: 2026-03-02 — Plan 05-03 complete (Repeat count spinbox + infinite loop engine support)
 
 Progress: [██████████] 100%
 
@@ -53,6 +53,7 @@ Progress: [██████████] 100%
 | Phase 04-flow-control-and-window-management P05 | 4 min | 2 tasks | 2 files |
 | Phase 04-flow-control-and-window-management P06 | 30 min | 2 tasks | 5 files |
 | Phase 05-record-logic-adaptation-and-fixes P01 | 7 min | 2 tasks | 3 files |
+| Phase 05-record-logic-adaptation-and-fixes P03 | 5 min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -97,6 +98,7 @@ Recent decisions affecting current work:
 - [Phase 05-record-logic-adaptation-and-fixes]: click_mode default is 'separate' to preserve existing behavior for all current users
 - [Phase 05-record-logic-adaptation-and-fixes]: hotkey_record_here stored as empty string when disabled — HotkeyManager must guard against registering empty string
 - [Phase 05-record-logic-adaptation-and-fixes]: Settings menu moved to top-level for discoverability and to separate it from File operations
+- [Phase 05-03]: repeat=-1 sentinel for infinite loop; on_done fires only on natural completion; bridges via existing progress queue with (-1,-1) sentinel
 
 ### Roadmap Evolution
 
@@ -116,5 +118,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-02
-Stopped at: UI hotfixes — toolbar text clipping + detail panel height (post-phase-4 polish)
-Resume file: .planning/phases/04-flow-control-and-window-management/04-06-SUMMARY.md
+Stopped at: Completed 05-03-PLAN.md
+Resume file: .planning/phases/05-record-logic-adaptation-and-fixes/05-03-SUMMARY.md
