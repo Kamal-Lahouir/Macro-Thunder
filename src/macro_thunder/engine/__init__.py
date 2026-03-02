@@ -49,11 +49,13 @@ class PlaybackEngine:
         kb_ctrl=None,
         on_progress: Optional[Callable[[int, int], None]] = None,
         on_loop_detected: Optional[Callable[[int, str], None]] = None,
+        on_done: Optional[Callable[[], None]] = None,
     ) -> None:
         self._mouse_ctrl = mouse_ctrl if mouse_ctrl is not None else mouse.Controller()
         self._kb_ctrl = kb_ctrl if kb_ctrl is not None else keyboard.Controller()
         self._on_progress = on_progress
         self._on_loop_detected = on_loop_detected
+        self._on_done = on_done
         self._stop_event = threading.Event()
         self._thread: Optional[threading.Thread] = None
 
@@ -98,7 +100,14 @@ class PlaybackEngine:
             if isinstance(b, LabelBlock)
         }
 
-        for _ in range(repeat):
+        iteration = 0
+        while True:
+            # Check if we've hit the repeat limit (repeat=-1 means infinite)
+            if repeat != -1 and iteration >= repeat:
+                break
+            if self._stop_event.is_set():
+                return  # immediate stop, no on_done
+
             t0 = time.perf_counter()
             # virtual_time: monotonically-increasing playback clock (recording seconds).
             # Advances by each block's recorded gap from the previous block, plus any
@@ -202,6 +211,12 @@ class PlaybackEngine:
                     self._on_progress(i + 1, len(blocks))
 
                 i += 1
+
+            iteration += 1
+
+        # All passes complete — signal done
+        if self._on_done is not None:
+            self._on_done()
 
     def _dispatch(self, block: object) -> None:
         """Dispatch a single block to the appropriate pynput controller."""

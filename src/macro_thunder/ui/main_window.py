@@ -122,6 +122,7 @@ class MainWindow(QMainWindow):
         self._engine = PlaybackEngine(
             on_progress=self._on_play_progress,
             on_loop_detected=self._on_loop_detected_callback,
+            on_done=self._on_play_done,
         )
 
         # Hotkey manager
@@ -177,9 +178,11 @@ class MainWindow(QMainWindow):
                 idx, total = self._play_progress_queue.get_nowait()
             except queue.Empty:
                 break
-            self._toolbar_widget.set_playback_progress(idx, total)
-            if idx >= total:
-                self._stop_play()  # auto-reset when playback finishes
+            if idx == -1 and total == -1:
+                self._stop_play()  # natural completion via on_done sentinel
+                break
+            else:
+                self._toolbar_widget.set_playback_progress(idx, total)
 
         # Drain loop detection notifications
         while not self._loop_detect_queue.empty():
@@ -311,6 +314,10 @@ class MainWindow(QMainWindow):
     def _on_play_progress(self, index: int, total: int) -> None:
         """Called from playback thread — put into queue, drain on main thread."""
         self._play_progress_queue.put((index, total))
+
+    def _on_play_done(self) -> None:
+        """Called from engine thread when all passes complete — bridge to main thread via queue."""
+        self._play_progress_queue.put((-1, -1))  # sentinel for "done"
 
     def _on_loop_detected_callback(self, flat_index: int, label_name: str) -> None:
         """Called from playback thread — put into queue, drain on main thread."""
