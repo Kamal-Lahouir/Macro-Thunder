@@ -87,11 +87,17 @@ Recent decisions affecting current work:
 - [Phase 04-02]: All new WindowFocusBlock fields use defaults for backwards-compatible deserialization
 - [Phase 04-flow-control-and-window-management]: _title_matches extracted as pure helper for unit testability; unknown match_mode falls back to Contains
 - [Phase 04-flow-control-and-window-management]: GotoBlock loop detection threshold is 1000 fires without non-flow progress; on_loop_detected signals UI via callback (queue bridge in Plan 06)
-- [Phase 04-flow-control-and-window-management]: Detail panel container has maxHeight 220; _clear_detail_panel() guards mutations; picker_service=None default keeps existing callers unchanged
+- [Phase 04-flow-control-and-window-management]: Detail panel container has maxHeight 360 (raised from 220 — WindowFocusPanel has 8+ fields, 220 clipped bottom items); _clear_detail_panel() guards mutations; picker_service=None default keeps existing callers unchanged
+- [UI hotfix 2026-03-02]: Toolbar setFixedHeight(48) removed — was clipping text at higher DPI/font sizes; speed preset buttons fixed widths removed (let Qt size to text); speed spinbox changed from setFixedWidth to setMinimumWidth
 - [Phase 04-flow-control-and-window-management 04-06]: on_loop_detected bridges playback thread to main thread via _loop_detect_queue drain in _update_status; select_flat_index scrolls editor to offending Goto row
 - [Phase 04-flow-control-and-window-management 04-06]: validate_gotos called in _start_play before engine.start(); missing labels shown in QMessageBox, playback blocked
 - [Phase 04-flow-control-and-window-management 04-06]: WindowPickerService owned by MainWindow; closeEvent calls cancel() to stop pynput listener before Qt teardown
 - [Phase 04-flow-control-and-window-management 04-06]: LabelBlock excluded from non-flow progress counter so loop detection is not defeated by Label blocks in the loop
+
+### Roadmap Evolution
+
+- Phase 5 added: Record Logic Adaptation and Fixes
+- Phase 6 added: UI Enhancements for User Friendly
 
 ### Pending Todos
 
@@ -106,5 +112,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-02
-Stopped at: Completed 04-06-PLAN.md — MainWindow integration: validation, loop detection, picker service
+Stopped at: UI hotfixes — toolbar text clipping + detail panel height (post-phase-4 polish)
 Resume file: .planning/phases/04-flow-control-and-window-management/04-06-SUMMARY.md
