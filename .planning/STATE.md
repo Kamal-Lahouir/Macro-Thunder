@@ -10,9 +10,9 @@ See: .planning/PROJECT.md (updated 2026-02-25)
 ## Current Position
 
 Phase: 4 of 4 (Flow Control and Window Management)
-Plan: 1 of 6 in current phase
+Plan: 5 of 6 in current phase
 Status: In Progress
-Last activity: 2026-03-02 — Plan 04-01 complete (validate_gotos + window_utils TDD)
+Last activity: 2026-03-02 — Plan 04-05 complete (block detail panels wired into EditorPanel)
 
 Progress: [████████░░] 80%
 
@@ -50,6 +50,7 @@ Progress: [████████░░] 80%
 | Phase 04-flow-control-and-window-management P01 | 2 min | 2 tasks | 4 files |
 | Phase 04-flow-control-and-window-management P03 | 5min | 1 tasks | 1 files |
 | Phase 04-flow-control-and-window-management P04 | 70s | 2 tasks | 3 files |
+| Phase 04-flow-control-and-window-management P05 | 4 min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -85,6 +86,7 @@ Recent decisions affecting current work:
 - [Phase 04-02]: All new WindowFocusBlock fields use defaults for backwards-compatible deserialization
 - [Phase 04-flow-control-and-window-management]: _title_matches extracted as pure helper for unit testability; unknown match_mode falls back to Contains
 - [Phase 04-flow-control-and-window-management]: GotoBlock loop detection threshold is 1000 fires without non-flow progress; on_loop_detected signals UI via callback (queue bridge in Plan 06)
+- [Phase 04-flow-control-and-window-management]: Detail panel container has maxHeight 220; _clear_detail_panel() guards mutations; picker_service=None default keeps existing callers unchanged
 
 ### Pending Todos
 
@@ -99,5 +101,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-02
-Stopped at: Completed 04-04-PLAN.md — Label/Goto styling + WindowPickerService
-Resume file: .planning/phases/04-flow-control-and-window-management/04-04-SUMMARY.md
+Stopped at: Completed 04-05-PLAN.md — block detail panels wired into EditorPanel
+Resume file: .planning/phases/04-flow-control-and-window-management/04-05-SUMMARY.md
