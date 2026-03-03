@@ -1,3 +1,16 @@
+---
+gsd_state_version: 1.0
+milestone: v1.0
+milestone_name: milestone
+status: unknown
+last_updated: "2026-03-03T09:41:07.825Z"
+progress:
+  total_phases: 7
+  completed_phases: 5
+  total_plans: 27
+  completed_plans: 24
+---
+
 # Project State
 
 ## Project Reference
@@ -54,6 +67,7 @@ Progress: [██████████] 100%
 | Phase 04-flow-control-and-window-management P06 | 30 min | 2 tasks | 5 files |
 | Phase 05-record-logic-adaptation-and-fixes P01 | 7 min | 2 tasks | 3 files |
 | Phase 05-record-logic-adaptation-and-fixes P03 | 5 min | 2 tasks | 3 files |
+| Phase 07-loop-blocks P01 | 94s | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -99,11 +113,13 @@ Recent decisions affecting current work:
 - [Phase 05-record-logic-adaptation-and-fixes]: hotkey_record_here stored as empty string when disabled — HotkeyManager must guard against registering empty string
 - [Phase 05-record-logic-adaptation-and-fixes]: Settings menu moved to top-level for discoverability and to separate it from File operations
 - [Phase 05-03]: repeat=-1 sentinel for infinite loop; on_done fires only on natural completion; bridges via existing progress queue with (-1,-1) sentinel
+- [Phase 07-01]: loop_stack initialized inside outer repeat loop so it resets between macro repeat iterations
 
 ### Roadmap Evolution
 
 - Phase 5 added: Record Logic Adaptation and Fixes
 - Phase 6 added: UI Enhancements for User Friendly
+- Phase 7 added: Loop Blocks (LoopStart/LoopEnd)
 
 ### Pending Todos
 
