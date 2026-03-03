@@ -75,6 +75,17 @@ class GotoBlock:
     type: Literal["Goto"] = field(default="Goto", init=False)
 
 
+@dataclass
+class LoopStartBlock:
+    repeat: int
+    type: Literal["LoopStart"] = field(default="LoopStart", init=False)
+
+
+@dataclass
+class LoopEndBlock:
+    type: Literal["LoopEnd"] = field(default="LoopEnd", init=False)
+
+
 ActionBlock = Union[
     MouseMoveBlock,
     MouseClickBlock,
@@ -84,6 +95,8 @@ ActionBlock = Union[
     WindowFocusBlock,
     LabelBlock,
     GotoBlock,
+    LoopStartBlock,
+    LoopEndBlock,
 ]
 
 _BLOCK_CLASSES: dict[str, type] = {
@@ -95,6 +108,8 @@ _BLOCK_CLASSES: dict[str, type] = {
     "WindowFocus": WindowFocusBlock,
     "Label": LabelBlock,
     "Goto": GotoBlock,
+    "LoopStart": LoopStartBlock,
+    "LoopEnd": LoopEndBlock,
 }
 
 

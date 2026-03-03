@@ -21,6 +21,8 @@ from macro_thunder.models.blocks import (
     LabelBlock,
     GotoBlock,
     WindowFocusBlock,
+    LoopStartBlock,
+    LoopEndBlock,
 )
 from macro_thunder.engine.window_utils import (
     _find_window,
@@ -125,6 +127,7 @@ class PlaybackEngine:
             i = max(0, min(start_index, len(blocks) - 1)) if iteration == 0 else 0
             goto_fire_count: dict[int, int] = {}
             progress_since_last_goto = False
+            loop_stack: list[tuple[int, int]] = []  # (loop_start_index, remaining)
 
             while i < len(blocks):
                 if self._stop_event.is_set():
@@ -158,6 +161,30 @@ class PlaybackEngine:
                     i = target_idx
                     continue
 
+                # --- Flow control: LoopStart ---
+                if isinstance(block, LoopStartBlock):
+                    progress_since_last_goto = True
+                    goto_fire_count.clear()
+                    loop_stack.append((i, block.repeat - 1))  # -1: first pass already in progress
+                    i += 1
+                    continue
+
+                # --- Flow control: LoopEnd ---
+                if isinstance(block, LoopEndBlock):
+                    progress_since_last_goto = True
+                    goto_fire_count.clear()
+                    if loop_stack:
+                        start_idx, remaining = loop_stack[-1]
+                        if remaining > 0:
+                            loop_stack[-1] = (start_idx, remaining - 1)
+                            i = start_idx + 1
+                        else:
+                            loop_stack.pop()
+                            i += 1
+                    else:
+                        i += 1  # orphaned LoopEnd — skip
+                    continue
+
                 # --- WindowFocus ---
                 if isinstance(block, WindowFocusBlock):
                     deadline = time.perf_counter() + block.timeout
@@ -185,6 +212,30 @@ class PlaybackEngine:
                             i += 1
                     progress_since_last_goto = True
                     goto_fire_count.clear()
+                    continue
+
+                # --- Flow control: LoopStart ---
+                if isinstance(block, LoopStartBlock):
+                    progress_since_last_goto = True
+                    goto_fire_count.clear()
+                    loop_stack.append((i, block.repeat - 1))  # -1: first pass already in progress
+                    i += 1
+                    continue
+
+                # --- Flow control: LoopEnd ---
+                if isinstance(block, LoopEndBlock):
+                    progress_since_last_goto = True
+                    goto_fire_count.clear()
+                    if loop_stack:
+                        start_idx, remaining = loop_stack[-1]
+                        if remaining > 0:
+                            loop_stack[-1] = (start_idx, remaining - 1)
+                            i = start_idx + 1
+                        else:
+                            loop_stack.pop()
+                            i += 1
+                    else:
+                        i += 1  # orphaned LoopEnd — skip
                     continue
 
                 # --- Normal action blocks (timing + dispatch) ---
