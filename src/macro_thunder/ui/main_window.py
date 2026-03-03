@@ -221,7 +221,7 @@ class MainWindow(QMainWindow):
                 break
             else:
                 self._toolbar_widget.set_playback_progress(idx + 1, total)
-                self._editor_panel.select_flat_index(idx)
+                self._editor_panel.set_playback_row(idx)
 
         # Drain loop detection notifications
         while not self._loop_detect_queue.empty():
@@ -391,6 +391,7 @@ class MainWindow(QMainWindow):
         self._engine.stop()
         self._state = AppState.IDLE
         self._toolbar_widget.set_playback(False)
+        self._editor_panel.clear_playback_row()
 
     def _on_play_progress(self, index: int, total: int) -> None:
         """Called from playback thread — put into queue, drain on main thread."""

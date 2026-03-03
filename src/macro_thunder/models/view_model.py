@@ -166,6 +166,7 @@ if _QT_AVAILABLE:
         def __init__(self, doc, parent=None):
             super().__init__(parent)
             self._doc = doc
+            self._playback_flat_index: int = -1  # -1 = no playback highlight
             # expanded state keyed by flat_start of group
             self._expanded: Dict[int, bool] = {}
             self._display_rows: List[DisplayRow] = []
@@ -209,6 +210,24 @@ if _QT_AVAILABLE:
             self._display_rows = rows
 
         # ------------------------------------------------------------------
+        # Playback highlight
+        # ------------------------------------------------------------------
+
+        def set_playback_flat_index(self, flat_index: int) -> None:
+            """Highlight the row at flat_index as the active playback step."""
+            old = self._playback_flat_index
+            self._playback_flat_index = flat_index
+            for display_row, row_obj in enumerate(self._display_rows):
+                if isinstance(row_obj, BlockRow) and row_obj.flat_index in (old, flat_index):
+                    idx = self.index(display_row, 0)
+                    idx_end = self.index(display_row, _NUM_COLS - 1)
+                    self.dataChanged.emit(idx, idx_end, [Qt.ItemDataRole.BackgroundRole])
+
+        def clear_playback_flat_index(self) -> None:
+            """Remove the playback highlight."""
+            self.set_playback_flat_index(-1)
+
+        # ------------------------------------------------------------------
         # QAbstractTableModel interface
         # ------------------------------------------------------------------
 
@@ -235,11 +254,13 @@ if _QT_AVAILABLE:
             if role == Qt.ItemDataRole.UserRole:
                 return self._display_rows[index.row()]
             if role == Qt.ItemDataRole.BackgroundRole:
+                from PyQt6.QtGui import QBrush, QColor
                 row_obj = self._display_rows[index.row()]
                 if isinstance(row_obj, BlockRow):
+                    if row_obj.flat_index == self._playback_flat_index:
+                        return QBrush(QColor(210, 160, 0))  # amber — playback cursor
                     block = self._doc.blocks[row_obj.flat_index]
                     if isinstance(block, (LabelBlock, GotoBlock)):
-                        from PyQt6.QtGui import QBrush, QColor
                         return QBrush(QColor(55, 45, 80))  # muted indigo — fits dark theme
                 return None
             if role == Qt.ItemDataRole.DecorationRole:

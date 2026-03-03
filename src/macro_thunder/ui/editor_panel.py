@@ -195,6 +195,23 @@ class EditorPanel(QFrame):
                 self._table.scrollTo(self._model.index(display_row, 0))
                 return
 
+    def set_playback_row(self, flat_index: int) -> None:
+        """Highlight flat_index with the amber playback cursor and scroll to it."""
+        if self._model is None:
+            return
+        self._model.set_playback_flat_index(flat_index)
+        for display_row in range(self._model.rowCount()):
+            from macro_thunder.models.view_model import BlockRow
+            row_obj = self._model.display_row(display_row)
+            if isinstance(row_obj, BlockRow) and row_obj.flat_index == flat_index:
+                self._table.scrollTo(self._model.index(display_row, 0))
+                return
+
+    def clear_playback_row(self) -> None:
+        """Remove the amber playback cursor highlight."""
+        if self._model is not None:
+            self._model.clear_playback_flat_index()
+
     def insert_blocks_at(self, flat_index: int, blocks: list) -> None:
         """Insert *blocks* after *flat_index* in the current model.
 
