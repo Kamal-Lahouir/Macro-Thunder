@@ -9,7 +9,7 @@ from PyQt6.QtWidgets import QStyledItemDelegate, QStyle
 from PyQt6.QtCore import Qt, QEvent, pyqtSignal
 from PyQt6.QtGui import QColor, QPainter
 
-from macro_thunder.models.view_model import GroupHeaderRow, COL_TYPE
+from macro_thunder.models.view_model import GroupHeaderRow, LoopHeaderRow, LoopFooterRow, LoopChildRow, COL_TYPE
 
 _AMBER = QColor(210, 160, 0)
 _AMBER_TEXT = QColor(20, 20, 20)  # dark text on amber for readability
@@ -42,6 +42,12 @@ class BlockDelegate(QStyledItemDelegate):
                 )
                 painter.setPen(old_pen)
             return
+        row_obj = index.data(Qt.ItemDataRole.UserRole)
+        if isinstance(row_obj, (LoopHeaderRow, LoopFooterRow, LoopChildRow)):
+            painter.save()
+            stripe_rect = option.rect.adjusted(0, 0, -(option.rect.width() - 4), 0)
+            painter.fillRect(stripe_rect, QColor(0, 160, 140))
+            painter.restore()
         super().paint(painter, option, index)
 
     def editorEvent(self, event, model, option, index):
