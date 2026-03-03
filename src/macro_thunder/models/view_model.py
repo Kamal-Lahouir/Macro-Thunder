@@ -17,6 +17,7 @@ from typing import Union, List, Tuple, Dict
 from macro_thunder.models.blocks import (
     ActionBlock, MouseMoveBlock, MouseClickBlock, MouseScrollBlock,
     KeyPressBlock, DelayBlock, WindowFocusBlock, LabelBlock, GotoBlock,
+    LoopStartBlock, LoopEndBlock,
 )
 
 
@@ -41,7 +42,26 @@ class GroupChildRow:
     group_flat_start: int
 
 
-DisplayRow = Union[BlockRow, GroupHeaderRow, GroupChildRow]
+@dataclass
+class LoopHeaderRow:
+    """Display row for a LoopStartBlock (shows loop header with repeat count)."""
+    flat_index: int
+
+
+@dataclass
+class LoopFooterRow:
+    """Display row for a LoopEndBlock (shows loop end marker)."""
+    flat_index: int
+
+
+@dataclass
+class LoopChildRow:
+    """Display row for a block inside a loop region."""
+    flat_index: int
+    loop_header_flat_index: int
+
+
+DisplayRow = Union[BlockRow, GroupHeaderRow, GroupChildRow, LoopHeaderRow, LoopFooterRow, LoopChildRow]
 
 
 def _rescale_group_duration(
@@ -127,6 +147,10 @@ def _block_value(block: ActionBlock) -> str:
         return f":{block.name}"
     if isinstance(block, GotoBlock):
         return f"→ {block.target}"
+    if isinstance(block, LoopStartBlock):
+        return f"repeat x{block.repeat}"
+    if isinstance(block, LoopEndBlock):
+        return "end loop"
     return ""
 
 
@@ -181,8 +205,25 @@ if _QT_AVAILABLE:
             blocks = self._doc.blocks
             rows: List[DisplayRow] = []
             i = 0
+            in_loop = False
+            loop_start_fi = 0
             while i < len(blocks):
                 block = blocks[i]
+                if isinstance(block, LoopStartBlock):
+                    rows.append(LoopHeaderRow(flat_index=i))
+                    in_loop = True
+                    loop_start_fi = i
+                    i += 1
+                    continue
+                if isinstance(block, LoopEndBlock):
+                    if in_loop:
+                        rows.append(LoopFooterRow(flat_index=i))
+                        in_loop = False
+                    else:
+                        # Orphaned LoopEnd — render as plain BlockRow
+                        rows.append(BlockRow(flat_index=i))
+                    i += 1
+                    continue
                 if isinstance(block, MouseMoveBlock):
                     # Scan forward to find run length
                     j = i + 1
@@ -205,7 +246,10 @@ if _QT_AVAILABLE:
                         rows.append(BlockRow(flat_index=i))
                         i += 1
                 else:
-                    rows.append(BlockRow(flat_index=i))
+                    if in_loop:
+                        rows.append(LoopChildRow(flat_index=i, loop_header_flat_index=loop_start_fi))
+                    else:
+                        rows.append(BlockRow(flat_index=i))
                     i += 1
             self._display_rows = rows
 
@@ -228,6 +272,12 @@ if _QT_AVAILABLE:
                 elif isinstance(row_obj, GroupChildRow):
                     dirty = row_obj.flat_index in (old, flat_index)
                 elif isinstance(row_obj, BlockRow):
+                    dirty = row_obj.flat_index in (old, flat_index)
+                elif isinstance(row_obj, LoopHeaderRow):
+                    dirty = row_obj.flat_index in (old, flat_index)
+                elif isinstance(row_obj, LoopFooterRow):
+                    dirty = row_obj.flat_index in (old, flat_index)
+                elif isinstance(row_obj, LoopChildRow):
                     dirty = row_obj.flat_index in (old, flat_index)
                 if dirty:
                     idx = self.index(display_row, 0)
@@ -281,6 +331,12 @@ if _QT_AVAILABLE:
                     elif isinstance(row_obj, BlockRow):
                         if row_obj.flat_index == pi:
                             return QBrush(QColor(210, 160, 0))
+                    # Loop rows: amber on exact step
+                    elif isinstance(row_obj, (LoopHeaderRow, LoopFooterRow, LoopChildRow)):
+                        if row_obj.flat_index == pi:
+                            return QBrush(QColor(210, 160, 0))
+                if isinstance(row_obj, (LoopHeaderRow, LoopFooterRow, LoopChildRow)):
+                    return QBrush(QColor(0, 60, 55))  # dark teal for loop region
                 if isinstance(row_obj, BlockRow):
                     block = self._doc.blocks[row_obj.flat_index]
                     if isinstance(block, (LabelBlock, GotoBlock)):
@@ -343,6 +399,31 @@ if _QT_AVAILABLE:
                     return f"({block.x}, {block.y})"  # type: ignore[attr-defined]
                 if col == COL_TIMESTAMP:
                     return f"{block.timestamp:.4f}"  # type: ignore[attr-defined]
+                return ""
+
+            if isinstance(row_obj, LoopHeaderRow):
+                block = blocks[row_obj.flat_index]
+                if col == COL_TYPE:
+                    return "Loop Start"
+                if col == COL_VALUE:
+                    return _block_value(block)
+                return ""
+
+            if isinstance(row_obj, LoopFooterRow):
+                if col == COL_TYPE:
+                    return "Loop End"
+                if col == COL_VALUE:
+                    return "end loop"
+                return ""
+
+            if isinstance(row_obj, LoopChildRow):
+                block = blocks[row_obj.flat_index]
+                if col == COL_TYPE:
+                    return "  Loop Body"
+                if col == COL_VALUE:
+                    return _block_value(block)
+                if col == COL_TIMESTAMP:
+                    return _block_timestamp(block)
                 return ""
 
             return None
@@ -533,6 +614,40 @@ if _QT_AVAILABLE:
                     self._expanded.pop(row_obj.flat_start, None)
                 elif isinstance(row_obj, GroupChildRow):
                     flat_to_delete.add(row_obj.flat_index)
+                elif isinstance(row_obj, LoopHeaderRow):
+                    # Delete LoopStart + all children + matching LoopEnd (pair-delete)
+                    start_fi = row_obj.flat_index
+                    flat_to_delete.add(start_fi)
+                    # Find matching LoopEnd forward
+                    depth = 1
+                    for k in range(start_fi + 1, len(self._doc.blocks)):
+                        b = self._doc.blocks[k]
+                        if isinstance(b, LoopStartBlock):
+                            depth += 1
+                        elif isinstance(b, LoopEndBlock):
+                            depth -= 1
+                            if depth == 0:
+                                flat_to_delete.add(k)
+                                break
+                        flat_to_delete.add(k)
+                elif isinstance(row_obj, LoopFooterRow):
+                    # Delete LoopEnd + matching LoopStart + all children (pair-delete)
+                    end_fi = row_obj.flat_index
+                    flat_to_delete.add(end_fi)
+                    # Find matching LoopStart backward
+                    depth = 1
+                    for k in range(end_fi - 1, -1, -1):
+                        b = self._doc.blocks[k]
+                        if isinstance(b, LoopEndBlock):
+                            depth += 1
+                        elif isinstance(b, LoopStartBlock):
+                            depth -= 1
+                            if depth == 0:
+                                flat_to_delete.add(k)
+                                break
+                        flat_to_delete.add(k)
+                elif isinstance(row_obj, LoopChildRow):
+                    flat_to_delete.add(row_obj.flat_index)
 
             new_blocks = [b for i, b in enumerate(self._doc.blocks) if i not in flat_to_delete]
             self.beginResetModel()
@@ -571,6 +686,8 @@ if _QT_AVAILABLE:
                     flat_insert = row_obj.flat_end + 1
                 elif isinstance(row_obj, GroupChildRow):
                     flat_insert = row_obj.flat_index + 1
+                elif isinstance(row_obj, (LoopHeaderRow, LoopFooterRow, LoopChildRow)):
+                    flat_insert = row_obj.flat_index + 1
                 else:
                     flat_insert = len(self._doc.blocks)
 
@@ -588,6 +705,8 @@ if _QT_AVAILABLE:
             if isinstance(row_obj, GroupHeaderRow):
                 return list(range(row_obj.flat_start, row_obj.flat_end + 1))
             if isinstance(row_obj, GroupChildRow):
+                return [row_obj.flat_index]
+            if isinstance(row_obj, (LoopHeaderRow, LoopFooterRow, LoopChildRow)):
                 return [row_obj.flat_index]
             return []
 
