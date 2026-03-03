@@ -779,6 +779,19 @@ if _QT_AVAILABLE:
             self.endResetModel()
             self.document_modified.emit()
 
+        def wrap_in_loop(self, flat_indices: list) -> None:
+            """Insert a LoopStart before and LoopEnd after the given flat indices."""
+            if not flat_indices:
+                return
+            lo = min(flat_indices)
+            hi = max(flat_indices)
+            self.beginResetModel()
+            self._doc.blocks.insert(hi + 1, LoopEndBlock())
+            self._doc.blocks.insert(lo, LoopStartBlock(repeat=2))
+            self._rebuild_display_rows()
+            self.endResetModel()
+            self.document_modified.emit()
+
 
 def _set_block_value(block: ActionBlock, value: str) -> None:
     """Parse value string and update the block's primary value field."""
