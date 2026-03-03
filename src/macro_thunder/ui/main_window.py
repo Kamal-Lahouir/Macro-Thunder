@@ -515,10 +515,13 @@ class MainWindow(QMainWindow):
     def nativeEvent(self, event_type, message):
         """Catch WM_HOTKEY messages — fired even inside exclusive-mode games."""
         if event_type == b"windows_generic_MSG":
-            import ctypes.wintypes
-            msg = ctypes.cast(int(message), ctypes.POINTER(ctypes.wintypes.MSG)).contents
-            if msg.message == WM_HOTKEY:
-                action = self._win32_hotkeys.action_for_id(msg.wParam)
+            import ctypes
+            # MSG layout (64-bit): hwnd(8) message(4) wParam(8) lParam(8) ...
+            addr = int(message)
+            msg_id = ctypes.c_uint.from_address(addr + 8).value
+            if msg_id == WM_HOTKEY:
+                wparam = ctypes.c_size_t.from_address(addr + 16).value
+                action = self._win32_hotkeys.action_for_id(wparam)
                 if action == "start_record":
                     self._start_record()
                 elif action == "stop_record":
@@ -530,7 +533,7 @@ class MainWindow(QMainWindow):
                 elif action == "record_here":
                     self._on_record_here_hotkey()
                 return True, 0
-        return super().nativeEvent(event_type, message)
+        return False, 0
 
     def closeEvent(self, event) -> None:
         self._win32_hotkeys.unregister_all()
