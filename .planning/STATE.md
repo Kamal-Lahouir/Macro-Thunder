@@ -18,14 +18,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-02-25)
 
 **Core value:** Exact mouse movement replay with a non-painful editor — record once, tune the timing, loop it.
-**Current focus:** Phase 5 — Record Logic Adaptation and Fixes
+**Current focus:** Phase 7 — Loop Blocks
 
 ## Current Position
 
-Phase: 5 of 5 (Record Logic Adaptation and Fixes)
+Phase: 7 of 7 (Loop Blocks)
 Plan: 3 of 4 in current phase
 Status: In Progress
-Last activity: 2026-03-02 — Plan 05-03 complete (Repeat count spinbox + infinite loop engine support)
+Last activity: 2026-03-03 — Plan 07-03 complete (Loop block visual styling, LoopStartPanel, BlockTypeDialog entries)
 
 Progress: [██████████] 100%
 
@@ -114,6 +114,7 @@ Recent decisions affecting current work:
 - [Phase 05-record-logic-adaptation-and-fixes]: Settings menu moved to top-level for discoverability and to separate it from File operations
 - [Phase 05-03]: repeat=-1 sentinel for infinite loop; on_done fires only on natural completion; bridges via existing progress queue with (-1,-1) sentinel
 - [Phase 07-01]: loop_stack initialized inside outer repeat loop so it resets between macro repeat iterations
+- [Phase 07-03]: Loop visual identity uses teal background (0,60,55) from BackgroundRole + 4px stripe (0,160,140) from delegate; stripe drawn before super().paint() so text renders on top
 
 ### Roadmap Evolution
 
@@ -134,5 +135,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-03
-Stopped at: Completed 07-02-PLAN.md
-Resume file: .planning/phases/07-loop-blocks/07-02-SUMMARY.md
+Stopped at: Completed 07-03-PLAN.md
+Resume file: .planning/phases/07-loop-blocks/07-03-SUMMARY.md
