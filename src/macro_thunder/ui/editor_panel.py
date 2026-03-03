@@ -230,6 +230,8 @@ class EditorPanel(QFrame):
 
     def _on_selection_changed(self, *_):
         """Show/hide detail panel based on selected block type."""
+        # User explicitly picked a row — clear amber so play starts from here
+        self.clear_playback_row()
         self._clear_detail_panel()
         if self._model is None:
             return
