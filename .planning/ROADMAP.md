@@ -100,6 +100,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | 4. Flow Control and Window Management | 6/6 | Complete | 2026-03-02 |
 | 5. Record Logic Adaptation and Fixes | 2/4 | In Progress|  |
 | 6. UI Enhancements for User Friendly | 0/TBD | Not started | - |
+| 7. Loop Blocks | 0/4 | Not started | - |
 
 ### Phase 5: Record Logic Adaptation and Fixes
 
@@ -148,3 +149,23 @@ Scope:
 
 Plans:
 - [ ] TBD (run /gsd:plan-phase 6 to break down)
+
+### Phase 7: Loop Blocks — LoopStart/LoopEnd block types that repeat a segment of actions N times, with playback engine support and visual loop region rendering in the editor
+
+**Goal**: Users can wrap any selection of blocks in a loop region that repeats N times during playback, with clear visual bracket rendering in the editor and pre-flight validation that prevents malformed loop structures from running
+**Requirements**: LOOP-01, LOOP-02, LOOP-03, LOOP-04, LOOP-05, LOOP-06, LOOP-07, LOOP-08, LOOP-09, LOOP-10
+**Depends on**: Phase 6
+**Plans**: 4 plans
+
+**Success Criteria** (what must be TRUE):
+  1. User can insert LoopStart/LoopEnd blocks via Add Block dialog or right-click "Wrap in Loop"
+  2. Loop regions render with a teal left border and indented child rows in the block editor
+  3. Selecting a LoopStart row shows a detail panel with an editable repeat count spinbox
+  4. Playback executes the loop body exactly repeat times then continues after the LoopEnd
+  5. Playback is blocked with a clear error if loop sentinels are unmatched or nested
+
+Plans:
+- [ ] 07-01-PLAN.md — TDD: LoopStartBlock/LoopEndBlock data model + engine loop_stack dispatch + validate_loops()
+- [ ] 07-02-PLAN.md — View model: LoopHeaderRow/LoopFooterRow/LoopChildRow + _rebuild_display_rows + set_playback_flat_index
+- [ ] 07-03-PLAN.md — Visual styling: block_delegate left-border stripe + LoopStartPanel + BlockTypeDialog entries
+- [ ] 07-04-PLAN.md — UI wiring: wrap_in_loop mutation + EditorPanel context menu + MainWindow validate_loops + human verify
