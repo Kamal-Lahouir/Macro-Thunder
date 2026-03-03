@@ -218,7 +218,18 @@ if _QT_AVAILABLE:
             old = self._playback_flat_index
             self._playback_flat_index = flat_index
             for display_row, row_obj in enumerate(self._display_rows):
-                if isinstance(row_obj, BlockRow) and row_obj.flat_index in (old, flat_index):
+                dirty = False
+                if isinstance(row_obj, GroupHeaderRow):
+                    # dirty if old or new flat_index falls inside this group
+                    dirty = (
+                        (old >= 0 and row_obj.flat_start <= old <= row_obj.flat_end)
+                        or (flat_index >= 0 and row_obj.flat_start <= flat_index <= row_obj.flat_end)
+                    )
+                elif isinstance(row_obj, GroupChildRow):
+                    dirty = row_obj.flat_index in (old, flat_index)
+                elif isinstance(row_obj, BlockRow):
+                    dirty = row_obj.flat_index in (old, flat_index)
+                if dirty:
                     idx = self.index(display_row, 0)
                     idx_end = self.index(display_row, _NUM_COLS - 1)
                     self.dataChanged.emit(idx, idx_end, [Qt.ItemDataRole.BackgroundRole])
@@ -256,9 +267,21 @@ if _QT_AVAILABLE:
             if role == Qt.ItemDataRole.BackgroundRole:
                 from PyQt6.QtGui import QBrush, QColor
                 row_obj = self._display_rows[index.row()]
+                pi = self._playback_flat_index
+                if pi >= 0:
+                    # GroupHeaderRow: amber if playback is anywhere inside the group
+                    if isinstance(row_obj, GroupHeaderRow):
+                        if row_obj.flat_start <= pi <= row_obj.flat_end:
+                            return QBrush(QColor(210, 160, 0))
+                    # GroupChildRow: amber on the exact step (group expanded)
+                    elif isinstance(row_obj, GroupChildRow):
+                        if row_obj.flat_index == pi:
+                            return QBrush(QColor(210, 160, 0))
+                    # BlockRow: amber on exact step
+                    elif isinstance(row_obj, BlockRow):
+                        if row_obj.flat_index == pi:
+                            return QBrush(QColor(210, 160, 0))
                 if isinstance(row_obj, BlockRow):
-                    if row_obj.flat_index == self._playback_flat_index:
-                        return QBrush(QColor(210, 160, 0))  # amber — playback cursor
                     block = self._doc.blocks[row_obj.flat_index]
                     if isinstance(block, (LabelBlock, GotoBlock)):
                         return QBrush(QColor(55, 45, 80))  # muted indigo — fits dark theme
