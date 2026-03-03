@@ -419,7 +419,7 @@ if _QT_AVAILABLE:
             if isinstance(row_obj, LoopChildRow):
                 block = blocks[row_obj.flat_index]
                 if col == COL_TYPE:
-                    return "  Loop Body"
+                    return f"  {block.type}"
                 if col == COL_VALUE:
                     return _block_value(block)
                 if col == COL_TIMESTAMP:
@@ -615,7 +615,8 @@ if _QT_AVAILABLE:
                 elif isinstance(row_obj, GroupChildRow):
                     flat_to_delete.add(row_obj.flat_index)
                 elif isinstance(row_obj, LoopHeaderRow):
-                    # Delete LoopStart + all children + matching LoopEnd (pair-delete)
+                    # Delete LoopStart + matching LoopEnd only (pair-delete).
+                    # Children between them become normal ungrouped blocks.
                     start_fi = row_obj.flat_index
                     flat_to_delete.add(start_fi)
                     # Find matching LoopEnd forward
@@ -629,9 +630,9 @@ if _QT_AVAILABLE:
                             if depth == 0:
                                 flat_to_delete.add(k)
                                 break
-                        flat_to_delete.add(k)
                 elif isinstance(row_obj, LoopFooterRow):
-                    # Delete LoopEnd + matching LoopStart + all children (pair-delete)
+                    # Delete LoopEnd + matching LoopStart only (pair-delete).
+                    # Children between them become normal ungrouped blocks.
                     end_fi = row_obj.flat_index
                     flat_to_delete.add(end_fi)
                     # Find matching LoopStart backward
@@ -645,7 +646,6 @@ if _QT_AVAILABLE:
                             if depth == 0:
                                 flat_to_delete.add(k)
                                 break
-                        flat_to_delete.add(k)
                 elif isinstance(row_obj, LoopChildRow):
                     flat_to_delete.add(row_obj.flat_index)
 

@@ -133,30 +133,64 @@ class TestDeleteLoopRows:
         doc = make_doc(*blocks)
         return BlockTableModel(doc)
 
-    def test_delete_loop_header_removes_entire_region(self):
-        from macro_thunder.models.view_model import LoopHeaderRow
+    def test_delete_loop_header_removes_only_boundaries_not_children(self):
+        """Bug 1 regression: pair-delete of LoopHeader must NOT remove children."""
+        from macro_thunder.models.view_model import LoopHeaderRow, BlockRow
         model = self._make_model(
-            DelayBlock(0.0),
-            LoopStartBlock(repeat=2),
-            DelayBlock(0.0),
-            LoopEndBlock(),
-            DelayBlock(0.0),
+            DelayBlock(0.0),         # flat 0 — outside, stays
+            LoopStartBlock(repeat=2), # flat 1 — header → deleted
+            DelayBlock(0.0),         # flat 2 — child → becomes normal block
+            LoopEndBlock(),          # flat 3 — footer → deleted
+            DelayBlock(0.0),         # flat 4 — outside, stays
         )
         assert isinstance(model._display_rows[1], LoopHeaderRow)
         model.delete_rows([1])
-        assert len(model._doc.blocks) == 2
-        assert isinstance(model._doc.blocks[0], DelayBlock)
-        assert isinstance(model._doc.blocks[1], DelayBlock)
+        # Only boundaries removed; 3 Delay blocks remain
+        assert len(model._doc.blocks) == 3
+        assert all(isinstance(b, DelayBlock) for b in model._doc.blocks)
+        # After rebuild, all rows are plain BlockRows (no loop rows)
+        assert all(isinstance(r, BlockRow) for r in model._display_rows)
 
-    def test_delete_loop_footer_removes_entire_region(self):
-        from macro_thunder.models.view_model import LoopFooterRow
+    def test_delete_loop_footer_removes_only_boundaries_not_children(self):
+        """Bug 1 regression: pair-delete of LoopFooter must NOT remove children."""
+        from macro_thunder.models.view_model import LoopFooterRow, BlockRow
         model = self._make_model(
-            LoopStartBlock(repeat=2),
-            DelayBlock(0.0),
-            LoopEndBlock(),
-            DelayBlock(0.0),
+            LoopStartBlock(repeat=2), # flat 0 — header → deleted
+            DelayBlock(0.0),         # flat 1 — child → becomes normal block
+            DelayBlock(0.0),         # flat 2 — child → becomes normal block
+            LoopEndBlock(),          # flat 3 — footer → deleted
+            DelayBlock(0.0),         # flat 4 — outside, stays
         )
-        assert isinstance(model._display_rows[2], LoopFooterRow)
-        model.delete_rows([2])
-        assert len(model._doc.blocks) == 1
-        assert isinstance(model._doc.blocks[0], DelayBlock)
+        assert isinstance(model._display_rows[3], LoopFooterRow)
+        model.delete_rows([3])
+        # Only boundaries removed; 3 Delay blocks remain
+        assert len(model._doc.blocks) == 3
+        assert all(isinstance(b, DelayBlock) for b in model._doc.blocks)
+        # After rebuild, all rows are plain BlockRows (no loop rows)
+        assert all(isinstance(r, BlockRow) for r in model._display_rows)
+
+    def test_loop_child_type_label_is_block_type_not_loop_body(self):
+        """Bug 2 regression: LoopChildRow COL_TYPE must show actual block type."""
+        from macro_thunder.models.view_model import BlockTableModel, LoopChildRow, COL_TYPE
+        from PyQt6.QtCore import Qt
+        doc = make_doc(LoopStartBlock(repeat=2), DelayBlock(0.0), LoopEndBlock())
+        model = BlockTableModel(doc)
+        # Row 1 is the LoopChildRow for the DelayBlock
+        assert isinstance(model._display_rows[1], LoopChildRow)
+        label = model.data(model.index(1, COL_TYPE), Qt.ItemDataRole.DisplayRole)
+        # Must show the actual type, not "Loop Body"
+        assert "delay" in label.lower() or "Delay" in label
+        assert "loop" not in label.lower() or "Loop Body" not in label
+
+    def test_loop_child_type_label_for_key_press(self):
+        """Bug 2 regression: KeyPressBlock inside loop shows its own type."""
+        from macro_thunder.models.view_model import BlockTableModel, LoopChildRow, COL_TYPE
+        from macro_thunder.models.blocks import KeyPressBlock
+        from PyQt6.QtCore import Qt
+        kp = KeyPressBlock(key="a", direction="down", timestamp=0.0)
+        doc = make_doc(LoopStartBlock(repeat=1), kp, LoopEndBlock())
+        model = BlockTableModel(doc)
+        assert isinstance(model._display_rows[1], LoopChildRow)
+        label = model.data(model.index(1, COL_TYPE), Qt.ItemDataRole.DisplayRole)
+        assert "key" in label.lower() or "Key" in label
+        assert "Loop Body" not in label
