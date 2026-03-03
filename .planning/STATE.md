@@ -23,9 +23,9 @@ See: .planning/PROJECT.md (updated 2026-02-25)
 ## Current Position
 
 Phase: 7 of 7 (Loop Blocks)
-Plan: 3 of 4 in current phase
+Plan: 4 of 4 in current phase (COMPLETE)
 Status: In Progress
-Last activity: 2026-03-03 — Plan 07-03 complete (Loop block visual styling, LoopStartPanel, BlockTypeDialog entries)
+Last activity: 2026-03-03 — Plan 07-04 complete (UI wiring, wrap-in-loop, validate_loops, pair-delete and type label bug fixes)
 
 Progress: [██████████] 100%
 
@@ -115,6 +115,8 @@ Recent decisions affecting current work:
 - [Phase 05-03]: repeat=-1 sentinel for infinite loop; on_done fires only on natural completion; bridges via existing progress queue with (-1,-1) sentinel
 - [Phase 07-04]: wrap_in_loop inserts LoopEnd at hi+1 before LoopStart at lo — preserves flat index validity during dual insertion
 - [Phase 07-04]: validate_loops called after validate_gotos in _start_play; unmatched loop sentinels block playback with QMessageBox.warning
+- [Phase 07-04]: pair-delete of LoopStart/LoopEnd removes only the two boundary rows; children stay as plain blocks (not the full region)
+- [Phase 07-04]: LoopChildRow type label is block.type with two-space indent — not a separate "Loop Body" label
 - [Phase 07-01]: loop_stack initialized inside outer repeat loop so it resets between macro repeat iterations
 - [Phase 07-03]: Loop visual identity uses teal background (0,60,55) from BackgroundRole + 4px stripe (0,160,140) from delegate; stripe drawn before super().paint() so text renders on top
 
@@ -137,5 +139,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-03
-Stopped at: Completed 07-04-PLAN.md — human-verify checkpoint
+Stopped at: Completed 07-04-PLAN.md — Phase 7 fully complete
 Resume file: .planning/phases/07-loop-blocks/07-04-SUMMARY.md
