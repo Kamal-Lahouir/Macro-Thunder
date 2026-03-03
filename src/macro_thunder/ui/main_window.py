@@ -27,7 +27,7 @@ from macro_thunder.ui.window_picker import WindowPickerService
 from macro_thunder.recorder import RecorderService
 from macro_thunder.engine import PlaybackEngine
 from macro_thunder.engine.validation import validate_gotos
-from macro_thunder.hotkeys import HotkeyManager
+from macro_thunder.hotkeys import HotkeyManager, Win32HotkeyService, WM_HOTKEY
 from macro_thunder.settings import AppSettings, SETTINGS_DIR
 from macro_thunder.models.document import MacroDocument
 from macro_thunder.persistence import save_macro, load_macro
@@ -134,12 +134,16 @@ class MainWindow(QMainWindow):
             on_done=self._on_play_done,
         )
 
-        # Hotkey manager
+        # Hotkey manager (pynput — works everywhere except exclusive-mode games)
         self._hotkeys = HotkeyManager(self)
         try:
             self._hotkeys.register(self._settings)
         except Exception as e:
             QMessageBox.warning(self, "Hotkey Error", str(e))
+
+        # Win32 RegisterHotKey — intercepted before any app including full-screen games
+        self._win32_hotkeys = Win32HotkeyService()
+        # HWND is available after the constructor; register in showEvent instead.
 
         # System tray icon
         self._tray_icon = QSystemTrayIcon(self)
@@ -484,6 +488,7 @@ class MainWindow(QMainWindow):
                 self._hotkeys.register(self._settings)
             except Exception as e:
                 QMessageBox.warning(self, "Hotkey Error", str(e))
+            self._win32_hotkeys.register(self._settings)
 
     # ------------------------------------------------------------------
     # Window picker slots (main thread — safe to call Qt methods here)
@@ -501,6 +506,33 @@ class MainWindow(QMainWindow):
         self.showNormal()
         self.activateWindow()
 
+    def showEvent(self, event) -> None:
+        super().showEvent(event)
+        # Register Win32 hotkeys now that the HWND is valid
+        self._win32_hotkeys.set_hwnd(int(self.winId()))
+        self._win32_hotkeys.register(self._settings)
+
+    def nativeEvent(self, event_type, message):
+        """Catch WM_HOTKEY messages — fired even inside exclusive-mode games."""
+        if event_type == b"windows_generic_MSG":
+            import ctypes.wintypes
+            msg = ctypes.cast(int(message), ctypes.POINTER(ctypes.wintypes.MSG)).contents
+            if msg.message == WM_HOTKEY:
+                action = self._win32_hotkeys.action_for_id(msg.wParam)
+                if action == "start_record":
+                    self._start_record()
+                elif action == "stop_record":
+                    self._stop_record()
+                elif action == "start_play":
+                    self._start_play(self._toolbar_widget._speed_spin.value(), 1)
+                elif action == "stop_play":
+                    self._stop_play()
+                elif action == "record_here":
+                    self._on_record_here_hotkey()
+                return True, 0
+        return super().nativeEvent(event_type, message)
+
     def closeEvent(self, event) -> None:
+        self._win32_hotkeys.unregister_all()
         self._picker_service.cancel()
         super().closeEvent(event)
