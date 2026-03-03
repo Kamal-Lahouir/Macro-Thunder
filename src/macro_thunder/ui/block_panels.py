@@ -11,7 +11,7 @@ from PyQt6.QtWidgets import (
     QSpinBox, QLabel,
 )
 from PyQt6.QtCore import Qt
-from macro_thunder.models.blocks import LabelBlock, GotoBlock, WindowFocusBlock
+from macro_thunder.models.blocks import LabelBlock, GotoBlock, WindowFocusBlock, LoopStartBlock
 
 
 class LabelPanel(QWidget):
@@ -47,6 +47,27 @@ class GotoPanel(QWidget):
 
     def _on_target_changed(self, text: str) -> None:
         self._block.target = text
+        self._cb()
+
+
+class LoopStartPanel(QWidget):
+    """Edit panel for LoopStartBlock: spinbox for repeat count."""
+
+    def __init__(self, block: LoopStartBlock, modified_cb, parent=None):
+        super().__init__(parent)
+        self._block = block
+        self._cb = modified_cb
+        layout = QFormLayout(self)
+        self._spin = QSpinBox()
+        self._spin.setMinimum(1)
+        self._spin.setMaximum(9999)
+        self._spin.setValue(block.repeat)
+        self._spin.setToolTip("Number of times to repeat the loop body (minimum 1)")
+        layout.addRow("Repeat Count:", self._spin)
+        self._spin.valueChanged.connect(self._on_value_changed)
+
+    def _on_value_changed(self, value: int) -> None:
+        self._block.repeat = value
         self._cb()
 
 

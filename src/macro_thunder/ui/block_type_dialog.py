@@ -22,6 +22,8 @@ from macro_thunder.models.blocks import (
     WindowFocusBlock,
     LabelBlock,
     GotoBlock,
+    LoopStartBlock,
+    LoopEndBlock,
 )
 
 # Ordered list of (label, default block factory)
@@ -34,6 +36,8 @@ _BLOCK_TYPES: list[tuple[str, ActionBlock]] = [
     ("Window Focus",  WindowFocusBlock(executable="", title="", match_mode="Contains")),
     ("Label",         LabelBlock(name="start")),
     ("Goto",          GotoBlock(target="start")),
+    ("Loop Start",    LoopStartBlock(repeat=2)),
+    ("Loop End",      LoopEndBlock()),
 ]
 
 
