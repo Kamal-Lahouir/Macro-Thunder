@@ -6,16 +6,19 @@ group row expand/collapse.
 """
 from PyQt6.QtWidgets import (
     QFrame, QVBoxLayout, QHBoxLayout, QPushButton,
-    QTableView, QAbstractItemView, QWidget,
+    QTableView, QAbstractItemView, QWidget, QMenu,
 )
-from PyQt6.QtCore import pyqtSignal
+from PyQt6.QtCore import pyqtSignal, Qt
 
-from macro_thunder.models.view_model import BlockTableModel, BlockRow, GroupHeaderRow, GroupChildRow
+from macro_thunder.models.view_model import (
+    BlockTableModel, BlockRow, GroupHeaderRow, GroupChildRow,
+    LoopHeaderRow, LoopFooterRow, LoopChildRow,
+)
 from macro_thunder.models.document import MacroDocument
-from macro_thunder.models.blocks import LabelBlock, GotoBlock, WindowFocusBlock
+from macro_thunder.models.blocks import LabelBlock, GotoBlock, WindowFocusBlock, LoopStartBlock
 from macro_thunder.ui.block_delegate import BlockDelegate
 from macro_thunder.ui.block_type_dialog import BlockTypeDialog
-from macro_thunder.ui.block_panels import LabelPanel, GotoPanel, WindowFocusPanel
+from macro_thunder.ui.block_panels import LabelPanel, GotoPanel, WindowFocusPanel, LoopStartPanel
 
 
 class EditorPanel(QFrame):
@@ -65,6 +68,10 @@ class EditorPanel(QFrame):
         self._delegate = BlockDelegate()
         self._table.setItemDelegate(self._delegate)
         self._delegate.toggle_group_requested.connect(self._on_toggle_group)
+
+        # Context menu for right-click actions
+        self._table.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self._table.customContextMenuRequested.connect(self._on_context_menu)
 
         layout.addLayout(toolbar_layout)
         layout.addWidget(self._table)
@@ -228,6 +235,27 @@ class EditorPanel(QFrame):
             return
         self._model.insert_blocks_at_flat(flat_index, blocks)
 
+    def _on_context_menu(self, pos) -> None:
+        """Show right-click context menu for the table."""
+        menu = QMenu(self)
+        wrap_action = menu.addAction("Wrap selection in Loop")
+        action = menu.exec(self._table.viewport().mapToGlobal(pos))
+        if action == wrap_action:
+            self._wrap_selection_in_loop()
+
+    def _wrap_selection_in_loop(self) -> None:
+        """Wrap selected rows in a LoopStart/LoopEnd pair."""
+        if self._model is None:
+            return
+        selected_rows = [idx.row() for idx in self._table.selectedIndexes() if idx.column() == 0]
+        if not selected_rows:
+            return
+        flat_indices: list[int] = []
+        for dr_idx in selected_rows:
+            flat_indices.extend(self._model._display_row_to_flat_indices(dr_idx))
+        if flat_indices:
+            self._model.wrap_in_loop(flat_indices)
+
     def _on_selection_changed(self, *_):
         """Show/hide detail panel based on selected block type."""
         # User explicitly picked a row — clear amber so play starts from here
@@ -239,16 +267,22 @@ class EditorPanel(QFrame):
         if len(rows) != 1:
             return  # only show panel for single selection
         row_obj = self._model.display_row(rows[0])
-        if row_obj is None or not isinstance(row_obj, BlockRow):
-            return  # groups/headers: no detail panel
-        block = self._model._doc.blocks[row_obj.flat_index]
+        if row_obj is None:
+            return
         panel = None
-        if isinstance(block, LabelBlock):
-            panel = LabelPanel(block, self._emit_modified)
-        elif isinstance(block, GotoBlock):
-            panel = GotoPanel(block, self._emit_modified)
-        elif isinstance(block, WindowFocusBlock):
-            panel = WindowFocusPanel(block, self._emit_modified, self._picker_service)
+        if isinstance(row_obj, LoopHeaderRow):
+            block = self._model._doc.blocks[row_obj.flat_index]
+            panel = LoopStartPanel(block, self._emit_modified)
+        elif isinstance(row_obj, (LoopFooterRow, LoopChildRow, GroupHeaderRow, GroupChildRow)):
+            return  # no detail panel for these row types
+        elif isinstance(row_obj, BlockRow):
+            block = self._model._doc.blocks[row_obj.flat_index]
+            if isinstance(block, LabelBlock):
+                panel = LabelPanel(block, self._emit_modified)
+            elif isinstance(block, GotoBlock):
+                panel = GotoPanel(block, self._emit_modified)
+            elif isinstance(block, WindowFocusBlock):
+                panel = WindowFocusPanel(block, self._emit_modified, self._picker_service)
         if panel is not None:
             self._detail_layout.addWidget(panel)
             self._detail_widget = panel

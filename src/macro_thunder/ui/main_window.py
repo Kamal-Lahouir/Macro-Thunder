@@ -26,7 +26,7 @@ from macro_thunder.ui.settings_dialog import SettingsDialog
 from macro_thunder.ui.window_picker import WindowPickerService
 from macro_thunder.recorder import RecorderService
 from macro_thunder.engine import PlaybackEngine
-from macro_thunder.engine.validation import validate_gotos
+from macro_thunder.engine.validation import validate_gotos, validate_loops
 from macro_thunder.hotkeys import HotkeyManager, Win32HotkeyService, WM_HOTKEY
 from macro_thunder.settings import AppSettings, SETTINGS_DIR
 from macro_thunder.models.document import MacroDocument
@@ -376,6 +376,15 @@ class MainWindow(QMainWindow):
                 "Missing Labels",
                 "Cannot play: the following label names are not defined:\n"
                 + "\n".join(f"  \u2022 {m}" for m in missing),
+            )
+            return
+        loop_errors = validate_loops(self._macro_buffer.blocks)
+        if loop_errors:
+            QMessageBox.warning(
+                self,
+                "Loop Structure Error",
+                "Cannot play — the macro has loop structure errors:\n\n"
+                + "\n".join(loop_errors),
             )
             return
         self._state = AppState.PLAYING
