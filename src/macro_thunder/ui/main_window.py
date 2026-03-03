@@ -182,7 +182,11 @@ class MainWindow(QMainWindow):
         self._hotkeys.start_record.connect(self._start_record)
         self._hotkeys.stop_record.connect(self._stop_record)
         self._hotkeys.start_play.connect(
-            lambda: self._start_play(self._toolbar_widget._speed_spin.value(), 1)
+            lambda: self._start_play(
+                self._toolbar_widget._speed_spin.value(),
+                -1 if self._toolbar_widget._chk_infinite.isChecked()
+                else self._toolbar_widget._spin_repeat.value(),
+            )
         )
         self._hotkeys.stop_play.connect(self._stop_play)
         self._hotkeys.record_here.connect(self._on_record_here_hotkey)
@@ -527,7 +531,11 @@ class MainWindow(QMainWindow):
                 elif action == "stop_record":
                     self._stop_record()
                 elif action == "start_play":
-                    self._start_play(self._toolbar_widget._speed_spin.value(), 1)
+                    self._start_play(
+                        self._toolbar_widget._speed_spin.value(),
+                        -1 if self._toolbar_widget._chk_infinite.isChecked()
+                        else self._toolbar_widget._spin_repeat.value(),
+                    )
                 elif action == "stop_play":
                     self._stop_play()
                 elif action == "record_here":
