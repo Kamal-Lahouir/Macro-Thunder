@@ -160,7 +160,7 @@ class TestProgress:
         thread = engine._thread
         thread.join(timeout=2.0)
 
-        assert progress_calls == [(1, 2), (2, 2)]
+        assert progress_calls == [(0, 2), (1, 2)]
 
 
 # ---------------------------------------------------------------------------
@@ -228,4 +228,4 @@ class TestSpeed:
 
         assert not thread.is_alive()
         assert len(progress_calls) == 3
-        assert progress_calls[-1] == (3, 3)
+        assert progress_calls[-1] == (2, 3)

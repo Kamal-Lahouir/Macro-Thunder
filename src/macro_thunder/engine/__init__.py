@@ -68,12 +68,13 @@ class PlaybackEngine:
         blocks: List[ActionBlock],
         speed: float = 1.0,
         repeat: int = 1,
+        start_index: int = 0,
     ) -> None:
         """Start playback in a daemon background thread. Returns immediately."""
         self._stop_event.clear()
         self._thread = threading.Thread(
             target=self._run,
-            args=(blocks, speed, repeat),
+            args=(blocks, speed, repeat, start_index),
             daemon=True,
         )
         self._thread.start()
@@ -91,6 +92,7 @@ class PlaybackEngine:
         blocks: List[ActionBlock],
         speed: float,
         repeat: int,
+        start_index: int = 0,
     ) -> None:
         """Main playback loop. Runs on background thread."""
         # Build label index once per _run call (outside repeat loop)
@@ -118,7 +120,9 @@ class PlaybackEngine:
             virtual_time = 0.0
             prev_ts = 0.0  # recording timestamp of the last real block seen
 
-            i = 0
+            # start_index only applies to the first iteration; subsequent repeats
+            # always play the full macro from the beginning.
+            i = max(0, min(start_index, len(blocks) - 1)) if iteration == 0 else 0
             goto_fire_count: dict[int, int] = {}
             progress_since_last_goto = False
 
@@ -208,7 +212,7 @@ class PlaybackEngine:
                 self._dispatch(block)
 
                 if self._on_progress is not None:
-                    self._on_progress(i + 1, len(blocks))
+                    self._on_progress(i, len(blocks))
 
                 i += 1
 

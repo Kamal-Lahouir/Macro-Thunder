@@ -220,7 +220,8 @@ class MainWindow(QMainWindow):
                 self._stop_play()  # natural completion via on_done sentinel
                 break
             else:
-                self._toolbar_widget.set_playback_progress(idx, total)
+                self._toolbar_widget.set_playback_progress(idx + 1, total)
+                self._editor_panel.select_flat_index(idx)
 
         # Drain loop detection notifications
         while not self._loop_detect_queue.empty():
@@ -379,7 +380,12 @@ class MainWindow(QMainWindow):
             return
         self._state = AppState.PLAYING
         self._toolbar_widget.set_playback(True)
-        self._engine.start(self._macro_buffer.blocks, speed=speed, repeat=repeat)
+        # Start from the selected line (or 0 if nothing / end-of-list selected)
+        start_index = max(0, self._editor_panel.get_selected_flat_index())
+        self._engine.start(
+            self._macro_buffer.blocks, speed=speed, repeat=repeat,
+            start_index=start_index,
+        )
 
     def _stop_play(self) -> None:
         self._engine.stop()
