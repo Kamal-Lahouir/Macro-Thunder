@@ -217,7 +217,7 @@ class MainWindow(QMainWindow):
             except queue.Empty:
                 break
             if idx == -1 and total == -1:
-                self._stop_play()  # natural completion via on_done sentinel
+                self._stop_play(clear_cursor=True)  # natural completion
                 break
             else:
                 self._toolbar_widget.set_playback_progress(idx + 1, total)
@@ -229,7 +229,7 @@ class MainWindow(QMainWindow):
                 flat_index, label_name = self._loop_detect_queue.get_nowait()
             except queue.Empty:
                 break
-            self._stop_play()
+            self._stop_play(clear_cursor=True)
             # Select first so the row is visible when the dialog closes
             self._editor_panel.select_flat_index(flat_index)
             QMessageBox.warning(
@@ -380,18 +380,21 @@ class MainWindow(QMainWindow):
             return
         self._state = AppState.PLAYING
         self._toolbar_widget.set_playback(True)
-        # Start from the selected line (or 0 if nothing / end-of-list selected)
-        start_index = max(0, self._editor_panel.get_selected_flat_index())
+        # Resume from amber cursor (paused position) if present,
+        # otherwise start from the selected line (or 0 if nothing selected).
+        paused_at = self._editor_panel.get_playback_row()
+        start_index = paused_at if paused_at >= 0 else max(0, self._editor_panel.get_selected_flat_index())
         self._engine.start(
             self._macro_buffer.blocks, speed=speed, repeat=repeat,
             start_index=start_index,
         )
 
-    def _stop_play(self) -> None:
+    def _stop_play(self, clear_cursor: bool = False) -> None:
         self._engine.stop()
         self._state = AppState.IDLE
         self._toolbar_widget.set_playback(False)
-        self._editor_panel.clear_playback_row()
+        if clear_cursor:
+            self._editor_panel.clear_playback_row()
 
     def _on_play_progress(self, index: int, total: int) -> None:
         """Called from playback thread — put into queue, drain on main thread."""

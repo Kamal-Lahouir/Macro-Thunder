@@ -195,6 +195,12 @@ class EditorPanel(QFrame):
                 self._table.scrollTo(self._model.index(display_row, 0))
                 return
 
+    def get_playback_row(self) -> int:
+        """Return the current amber playback cursor flat index, or -1 if none."""
+        if self._model is None:
+            return -1
+        return self._model._playback_flat_index
+
     def set_playback_row(self, flat_index: int) -> None:
         """Highlight flat_index with the amber playback cursor and scroll to it."""
         if self._model is None:
