@@ -113,6 +113,8 @@ Recent decisions affecting current work:
 - [Phase 05-record-logic-adaptation-and-fixes]: hotkey_record_here stored as empty string when disabled — HotkeyManager must guard against registering empty string
 - [Phase 05-record-logic-adaptation-and-fixes]: Settings menu moved to top-level for discoverability and to separate it from File operations
 - [Phase 05-03]: repeat=-1 sentinel for infinite loop; on_done fires only on natural completion; bridges via existing progress queue with (-1,-1) sentinel
+- [Phase 07-04]: wrap_in_loop inserts LoopEnd at hi+1 before LoopStart at lo — preserves flat index validity during dual insertion
+- [Phase 07-04]: validate_loops called after validate_gotos in _start_play; unmatched loop sentinels block playback with QMessageBox.warning
 - [Phase 07-01]: loop_stack initialized inside outer repeat loop so it resets between macro repeat iterations
 - [Phase 07-03]: Loop visual identity uses teal background (0,60,55) from BackgroundRole + 4px stripe (0,160,140) from delegate; stripe drawn before super().paint() so text renders on top
 
@@ -135,5 +137,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-03
-Stopped at: Completed 07-03-PLAN.md
-Resume file: .planning/phases/07-loop-blocks/07-03-SUMMARY.md
+Stopped at: Completed 07-04-PLAN.md — human-verify checkpoint
+Resume file: .planning/phases/07-loop-blocks/07-04-SUMMARY.md
