@@ -55,6 +55,9 @@ class RecorderService:
         # Keys physically held at recording start (hotkey residue).
         # Their first release is silently skipped; they're recorded normally thereafter.
         self._held_at_start: set = set()
+        # Set to True when the stop hotkey press fires STOP_SENTINEL so the
+        # matching key-up can be suppressed in _on_release.
+        self._stop_key_consumed: bool = False
 
     # ------------------------------------------------------------------
     # Public API
@@ -169,6 +172,7 @@ class RecorderService:
 
         # Direct stop-hotkey fallback in case the GlobalHotKeys chain is broken.
         if self._stop_hotkey_str and self._matches_stop_hotkey(key):
+            self._stop_key_consumed = True
             self._queue.put(self.STOP_SENTINEL)
             return  # don't record the stop key itself
 
@@ -202,6 +206,10 @@ class RecorderService:
         # recording started (hotkey modifier/trigger residue, not intentional input).
         if key in self._held_at_start:
             self._held_at_start.discard(key)
+            return
+
+        if self._stop_key_consumed and self._matches_stop_hotkey(key):
+            self._stop_key_consumed = False
             return
 
         if self._click_mode == "combined":
