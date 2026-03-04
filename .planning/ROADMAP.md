@@ -206,3 +206,24 @@ Plans: 2 plans
 Plans:
 - [ ] 08-01-PLAN.md � block_edit_dialog.py: all per-type edit dialogs, KeyCaptureField, paired MouseClick sync
 - [ ] 08-02-PLAN.md � EditorPanel double-click wiring + human verify
+
+### Phase 9: QA Pass — Bug Fixes and Polish
+
+**Goal**: Every implemented feature works correctly end-to-end — playback resumes from the amber cursor after a hotkey stop, recording produces clean blocks with no residue, the block edit dialog applies changes correctly, and no regressions exist in flow control or loop execution
+**Depends on**: Phase 8
+
+Scope:
+- **Playback state machine**: Fix stale sentinel bug where stop-hotkey + queue drain clears the amber cursor; verify resume-from-amber works via hotkey and via UI button; verify repeat count and infinite loop termination
+- **Recording residue**: Fix stop-record hotkey key-up leaking into blocks (known `_stop_key_consumed` bug); verify click mode 1 vs 2 produces correct block counts
+- **Block edit dialog (Phase 8)**: Verify double-click opens correct dialog for each block type, paired MouseClick sync works, key capture works, dirty flag is set, Cancel leaves block unchanged
+- **Flow control & loops**: Verify Label/Goto jumps correctly, missing-label error fires, loop body executes exactly N times, unmatched sentinel error fires
+- **General polish**: Any visual glitches, wrong button states, or UI inconsistencies found during testing
+
+**Success Criteria** (what must be TRUE):
+  1. Press Play → press Stop hotkey → amber cursor stays on the stopped row → press Play hotkey → playback resumes from that row (not from row 0)
+  2. Recording with stop hotkey does not produce a KeyPress block for the stop key
+  3. Double-clicking every block type opens the correct edit dialog; confirming a change marks the macro dirty
+  4. A macro with Label/Goto loops executes the correct number of iterations without hanging
+  5. No button state mismatches (e.g., Play button shows active when IDLE, or toolbar blink persists after stop)
+
+Plans: TBD
