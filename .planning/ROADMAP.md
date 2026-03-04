@@ -204,5 +204,5 @@ Scope:
 Plans: 2 plans
 
 Plans:
-- [ ] 08-01-PLAN.md — block_edit_dialog.py: all per-type edit dialogs, KeyCaptureField, paired MouseClick sync
-- [ ] 08-02-PLAN.md — EditorPanel double-click wiring + human verify
+- [ ] 08-01-PLAN.md ï¿½ block_edit_dialog.py: all per-type edit dialogs, KeyCaptureField, paired MouseClick sync
+- [ ] 08-02-PLAN.md ï¿½ EditorPanel double-click wiring + human verify

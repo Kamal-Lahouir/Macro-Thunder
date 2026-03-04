@@ -18,14 +18,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-02-25)
 
 **Core value:** Exact mouse movement replay with a non-painful editor — record once, tune the timing, loop it.
-**Current focus:** Phase 7 — Loop Blocks
+**Current focus:** Phase 8 — Block Edit Dialog
 
 ## Current Position
 
-Phase: 7 of 7 (Loop Blocks)
-Plan: 4 of 4 in current phase (COMPLETE)
+Phase: 8 of 8 (Block Edit Dialog)
+Plan: 1 of N in current phase (IN PROGRESS)
 Status: In Progress
-Last activity: 2026-03-03 — Plan 07-04 complete (UI wiring, wrap-in-loop, validate_loops, pair-delete and type label bug fixes)
+Last activity: 2026-03-04 — Plan 08-01 complete (block_edit_dialog.py with all per-type edit dialogs, KeyCaptureField, open_edit_dialog dispatcher)
 
 Progress: [██████████] 100%
 
@@ -68,6 +68,7 @@ Progress: [██████████] 100%
 | Phase 05-record-logic-adaptation-and-fixes P01 | 7 min | 2 tasks | 3 files |
 | Phase 05-record-logic-adaptation-and-fixes P03 | 5 min | 2 tasks | 3 files |
 | Phase 07-loop-blocks P01 | 94s | 2 tasks | 4 files |
+| Phase 08-block-edit-dialog P01 | 4 min | 1 task | 1 file |
 
 ## Accumulated Context
 
@@ -119,6 +120,9 @@ Recent decisions affecting current work:
 - [Phase 07-04]: LoopChildRow type label is block.type with two-space indent — not a separate "Loop Body" label
 - [Phase 07-01]: loop_stack initialized inside outer repeat loop so it resets between macro repeat iterations
 - [Phase 07-03]: Loop visual identity uses teal background (0,60,55) from BackgroundRole + 4px stripe (0,160,140) from delegate; stripe drawn before super().paint() so text renders on top
+- [Phase 08-01]: KeyCaptureField stores pynput single-key format (no modifier combos) — distinct from HotkeyField which supports modifier combos like ctrl+a
+- [Phase 08-01]: _find_click_partner scans forward for "up" partner when editing "down" MouseClickBlock, backward when editing "up"; matches on button field
+- [Phase 08-01]: All block edit dialogs write to block only in accept() — Cancel leaves block fields unchanged (Pattern 2)
 
 ### Roadmap Evolution
 
@@ -138,6 +142,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-03
-Stopped at: Completed 07-04-PLAN.md — Phase 7 fully complete
-Resume file: .planning/phases/07-loop-blocks/07-04-SUMMARY.md
+Last session: 2026-03-04
+Stopped at: Completed 08-01-PLAN.md — block_edit_dialog.py with all per-type edit dialogs
+Resume file: .planning/phases/08-block-edit-dialog/08-01-SUMMARY.md
