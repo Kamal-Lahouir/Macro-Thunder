@@ -1,31 +1,30 @@
 ---
 gsd_state_version: 1.0
 milestone: v1.0
-milestone_name: milestone
-status: unknown
-last_updated: "2026-03-04T10:45:17.113Z"
+milestone_name: MVP
+status: shipped
+last_updated: "2026-03-04T00:00:00.000Z"
 progress:
   total_phases: 9
-  completed_phases: 7
+  completed_phases: 9
   total_plans: 32
-  completed_plans: 31
+  completed_plans: 32
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-02-25)
+See: .planning/PROJECT.md (updated 2026-03-04)
 
 **Core value:** Exact mouse movement replay with a non-painful editor — record once, tune the timing, loop it.
-**Current focus:** Phase 9 — QA Pass
+**Current focus:** Planning next milestone (v1.1)
 
 ## Current Position
 
-Phase: 9 of 9 (QA Pass)
-Plan: 2 of 3 in current phase (IN PROGRESS)
-Status: In Progress
-Last activity: 2026-03-04 — Plan 09-01 complete (stale sentinel guard + stop-key release suppression, 10 regression tests)
+Milestone v1.0 MVP — SHIPPED 2026-03-04
+All 9 phases, 32 plans complete.
+Last activity: 2026-03-04 — v1.0 milestone archived
 
 Progress: [██████████] 100%
 
