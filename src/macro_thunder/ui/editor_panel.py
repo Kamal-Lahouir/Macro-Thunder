@@ -73,6 +73,9 @@ class EditorPanel(QFrame):
         self._table.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self._table.customContextMenuRequested.connect(self._on_context_menu)
 
+        # Double-click to edit block
+        self._table.doubleClicked.connect(self._on_double_click)
+
         layout.addLayout(toolbar_layout)
         layout.addWidget(self._table)
 
@@ -116,6 +119,37 @@ class EditorPanel(QFrame):
     def _selected_display_rows(self) -> list[int]:
         indexes = self._table.selectionModel().selectedRows()
         return sorted({idx.row() for idx in indexes})
+
+    def _on_double_click(self, index) -> None:
+        """Open the edit dialog for the double-clicked block row."""
+        if self._model is None:
+            return
+        row_obj = self._model.display_row(index.row())
+        if row_obj is None:
+            return
+        # GroupHeaderRow: double-click handled by delegate expand/collapse, no edit dialog
+        # LoopFooterRow: LoopEndBlock has no editable fields
+        if isinstance(row_obj, (GroupHeaderRow, LoopFooterRow)):
+            return
+        if isinstance(row_obj, BlockRow):
+            flat_index = row_obj.flat_index
+        elif isinstance(row_obj, LoopHeaderRow):
+            flat_index = row_obj.flat_index
+        elif isinstance(row_obj, LoopChildRow):
+            flat_index = row_obj.flat_index
+        elif isinstance(row_obj, GroupChildRow):
+            flat_index = row_obj.flat_index
+        else:
+            return
+        block = self._model._doc.blocks[flat_index]
+        from macro_thunder.ui.block_edit_dialog import open_edit_dialog
+        confirmed = open_edit_dialog(block, self._model._doc.blocks, self)
+        if confirmed:
+            self._model.beginResetModel()
+            self._model._rebuild_display_rows()
+            self._model.endResetModel()
+            self._model.document_modified.emit()
+            self.document_modified.emit()
 
     def _on_toggle_group(self, display_row_index: int) -> None:
         if self._model:
