@@ -97,6 +97,22 @@ class PlaybackEngine:
         start_index: int = 0,
     ) -> None:
         """Main playback loop. Runs on background thread."""
+        try:
+            self._run_inner(blocks, speed, repeat, start_index)
+        finally:
+            # Always signal done — even on exception or early stop — so
+            # MainWindow can reset state back to IDLE.
+            if self._on_done is not None:
+                self._on_done()
+
+    def _run_inner(
+        self,
+        blocks: List[ActionBlock],
+        speed: float,
+        repeat: int,
+        start_index: int = 0,
+    ) -> None:
+        """Inner playback loop (called by _run inside try/finally)."""
         # Build label index once per _run call (outside repeat loop)
         label_index: dict[str, int] = {
             b.name: idx
@@ -269,9 +285,7 @@ class PlaybackEngine:
 
             iteration += 1
 
-        # All passes complete — signal done
-        if self._on_done is not None:
-            self._on_done()
+        # All passes complete — _run's finally will call on_done
 
     def _dispatch(self, block: object) -> None:
         """Dispatch a single block to the appropriate pynput controller."""
@@ -279,6 +293,7 @@ class PlaybackEngine:
             self._mouse_ctrl.position = (block.x, block.y)
 
         elif isinstance(block, MouseClickBlock):
+            self._mouse_ctrl.position = (block.x, block.y)
             btn = mouse.Button[block.button]
             if block.direction == "down":
                 self._mouse_ctrl.press(btn)
@@ -289,6 +304,7 @@ class PlaybackEngine:
                 self._mouse_ctrl.release(btn)
 
         elif isinstance(block, MouseScrollBlock):
+            self._mouse_ctrl.position = (block.x, block.y)
             self._mouse_ctrl.scroll(block.dx, block.dy)
 
         elif isinstance(block, KeyPressBlock):

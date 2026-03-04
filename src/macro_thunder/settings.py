@@ -3,7 +3,7 @@ import dataclasses
 import json
 import pathlib
 
-SETTINGS_DIR = pathlib.Path.home() / "Documents" / "MacroThunder"
+SETTINGS_DIR = pathlib.Path.home() / "Documents" / "Althar"
 SETTINGS_FILE = SETTINGS_DIR / "settings.json"
 
 
@@ -17,6 +17,8 @@ class AppSettings:
     click_mode: str = "separate"        # "separate" = down+up blocks, "combined" = single click block
     hotkey_record_here: str = ""        # empty string = disabled; guarded in HotkeyManager
     sound_cue_enabled: bool = False     # winsound.Beep on record start; off by default
+    post_playback_action: str = "none"  # "none" | "shutdown" | "sleep"
+    post_playback_warn: bool = True     # show warning dialog before play when action is set
 
     @classmethod
     def load(cls) -> "AppSettings":

@@ -261,6 +261,17 @@ class SettingsDialog(QDialog):
         self._chk_sound_cue.setChecked(settings.sound_cue_enabled)
         options_form.addRow("Sound cue on record:", self._chk_sound_cue)
 
+        self._POST_ACTION_VALUES = ["none", "shutdown", "sleep"]
+        self._combo_post_action = QComboBox()
+        self._combo_post_action.addItems(["None", "Shutdown", "Sleep"])
+        idx = self._POST_ACTION_VALUES.index(settings.post_playback_action) if settings.post_playback_action in self._POST_ACTION_VALUES else 0
+        self._combo_post_action.setCurrentIndex(idx)
+        options_form.addRow("After playback:", self._combo_post_action)
+
+        self._chk_post_warn = QCheckBox()
+        self._chk_post_warn.setChecked(settings.post_playback_warn)
+        options_form.addRow("Warn before play:", self._chk_post_warn)
+
         tabs.addTab(options_widget, "Options")
 
         # Button box
@@ -296,6 +307,8 @@ class SettingsDialog(QDialog):
         self._settings.mouse_threshold_px = self._spin_threshold.value()
         self._settings.click_mode = "combined" if self._combo_click_mode.currentIndex() == 1 else "separate"
         self._settings.sound_cue_enabled = self._chk_sound_cue.isChecked()
+        self._settings.post_playback_action = self._POST_ACTION_VALUES[self._combo_post_action.currentIndex()]
+        self._settings.post_playback_warn = self._chk_post_warn.isChecked()
         self._settings.save()
         super().accept()
 

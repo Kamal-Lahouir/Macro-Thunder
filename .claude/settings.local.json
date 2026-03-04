@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "Bash(cd:*)",
+      "Bash(tail:*)",
+      "Bash(/c/Users/AMD/AppData/Local/Programs/Python/Python314/python.exe:*)",
+      "Bash(node:*)"
+    ]
+  }
+}

@@ -1,12 +1,15 @@
 from __future__ import annotations
 
+import ctypes
 import enum
 import pathlib
 import queue
+import subprocess
 import sys
 from typing import Optional
 
 from PyQt6.QtWidgets import (
+    QCheckBox,
     QFileDialog,
     QMainWindow,
     QMessageBox,
@@ -42,7 +45,7 @@ class AppState(enum.Enum):
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Macro Thunder")
+        self.setWindowTitle("Althar")
         self.resize(1200, 700)
 
         # Load settings
@@ -148,7 +151,7 @@ class MainWindow(QMainWindow):
         # System tray icon
         self._tray_icon = QSystemTrayIcon(self)
         self._tray_icon.setIcon(self._make_tray_icon("gray"))
-        self._tray_icon.setToolTip("Macro Thunder")
+        self._tray_icon.setToolTip("Althar")
         tray_menu = QMenu()
         self._tray_show_action = QAction("Show", self)
         self._tray_show_action.triggered.connect(self.showNormal)
@@ -387,6 +390,30 @@ class MainWindow(QMainWindow):
                 + "\n".join(loop_errors),
             )
             return
+        if self._settings.post_playback_action != "none" and self._settings.post_playback_warn:
+            action_label = "shut down" if self._settings.post_playback_action == "shutdown" else "sleep"
+            msg = QMessageBox(self)
+            msg.setIcon(QMessageBox.Icon.Warning)
+            msg.setWindowTitle("Post-Playback Action")
+            msg.setText(f"When this macro finishes, the computer will <b>{action_label}</b>.")
+            msg.setInformativeText("Are you sure you want to continue?")
+            dont_warn_cb = QCheckBox("Don't show this warning again")
+            msg.setCheckBox(dont_warn_cb)
+            msg.setStandardButtons(QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Cancel)
+            msg.setDefaultButton(QMessageBox.StandardButton.Cancel)
+            if msg.exec() != QMessageBox.StandardButton.Ok:
+                return
+            if dont_warn_cb.isChecked():
+                self._settings.post_playback_warn = False
+                self._settings.save()
+
+        # Drain any stale sentinel from a previous interrupted playback
+        while not self._play_progress_queue.empty():
+            try:
+                self._play_progress_queue.get_nowait()
+            except queue.Empty:
+                break
+
         self._state = AppState.PLAYING
         self._toolbar_widget.set_playback(True)
         # Resume from amber cursor (paused position) if present,
@@ -404,6 +431,14 @@ class MainWindow(QMainWindow):
         self._toolbar_widget.set_playback(False)
         if clear_cursor:
             self._editor_panel.clear_playback_row()
+            self._run_post_playback_action()
+
+    def _run_post_playback_action(self) -> None:
+        action = self._settings.post_playback_action
+        if action == "shutdown":
+            subprocess.run(["shutdown", "/s", "/t", "0"], check=False)
+        elif action == "sleep":
+            ctypes.windll.powrprof.SetSuspendState(False, False, False)
 
     def _on_play_progress(self, index: int, total: int) -> None:
         """Called from playback thread — put into queue, drain on main thread."""

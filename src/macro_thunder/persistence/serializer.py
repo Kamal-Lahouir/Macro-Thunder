@@ -49,7 +49,7 @@ def rename_macro(old_path: Path, new_name: str) -> Path:
 
 
 def default_macro_dir() -> Path:
-    """Returns ~/Documents/MacroThunder/, creating it if needed."""
-    p = Path.home() / "Documents" / "MacroThunder"
+    """Returns ~/Documents/Althar/, creating it if needed."""
+    p = Path.home() / "Documents" / "Althar"
     p.mkdir(parents=True, exist_ok=True)
     return p
