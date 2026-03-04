@@ -230,30 +230,6 @@ class PlaybackEngine:
                     goto_fire_count.clear()
                     continue
 
-                # --- Flow control: LoopStart ---
-                if isinstance(block, LoopStartBlock):
-                    progress_since_last_goto = True
-                    goto_fire_count.clear()
-                    loop_stack.append((i, block.repeat - 1))  # -1: first pass already in progress
-                    i += 1
-                    continue
-
-                # --- Flow control: LoopEnd ---
-                if isinstance(block, LoopEndBlock):
-                    progress_since_last_goto = True
-                    goto_fire_count.clear()
-                    if loop_stack:
-                        start_idx, remaining = loop_stack[-1]
-                        if remaining > 0:
-                            loop_stack[-1] = (start_idx, remaining - 1)
-                            i = start_idx + 1
-                        else:
-                            loop_stack.pop()
-                            i += 1
-                    else:
-                        i += 1  # orphaned LoopEnd — skip
-                    continue
-
                 # --- Normal action blocks (timing + dispatch) ---
                 progress_since_last_goto = True
                 goto_fire_count.clear()
