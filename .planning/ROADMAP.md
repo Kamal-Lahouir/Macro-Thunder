@@ -169,3 +169,40 @@ Plans:
 - [ ] 07-02-PLAN.md — View model: LoopHeaderRow/LoopFooterRow/LoopChildRow + _rebuild_display_rows + set_playback_flat_index
 - [ ] 07-03-PLAN.md — Visual styling: block_delegate left-border stripe + LoopStartPanel + BlockTypeDialog entries
 - [ ] 07-04-PLAN.md — UI wiring: wrap_in_loop mutation + EditorPanel context menu + MainWindow validate_loops + human verify
+
+### Phase 8: Block Edit Dialog
+
+**Goal**: Users can double-click any block in the editor to open a modal dialog and edit its fields in-place — with paired press/release MouseClick blocks edited atomically so button and coordinates stay in sync
+**Depends on**: Phase 7
+
+Scope:
+- **Double-click trigger**: Double-clicking any row in the block editor opens a per-type edit dialog
+- **Per-type dialogs**: Each block type gets a form with its editable fields:
+  - `MouseClickBlock`: x, y, button (left/right/middle), direction (down/up/click)
+  - `MouseMoveBlock`: x, y
+  - `MouseScrollBlock`: x, y, dx, dy
+  - `KeyPressBlock`: key (press-to-capture), direction (down/up/key)
+  - `DelayBlock`: duration (float, seconds)
+  - `LabelBlock`: name
+  - `GotoBlock`: target label name
+  - `WindowFocusBlock`: executable, title, match_mode, timeout, on_failure_label, on_success_label, reposition, x, y, w, h
+  - `LoopStartBlock`: repeat count
+  - `LoopEndBlock`: no editable fields (dialog not opened)
+- **Paired block sync**: When a `MouseClickBlock` with `direction="down"` is double-clicked, the engine searches for its paired `direction="up"` block (next sibling with matching button). Editing button or x/y applies to both blocks atomically. Same if the user double-clicks the "up" block — finds the "down" partner.
+- **Key capture**: KeyPress dialog has a "Press a key..." capture button (same pattern as Settings hotkey UI)
+- **Dirty flag**: Any confirmed edit marks the macro as unsaved (same as delete/reorder)
+- **OK/Cancel**: Dialog has OK (apply) and Cancel (discard) buttons
+
+**Success Criteria** (what must be TRUE):
+  1. Double-clicking any editable block row opens a modal dialog with the correct fields pre-filled
+  2. Editing a MouseClick down/up pair via either block updates button and coordinates on both blocks
+  3. KeyPress key field uses press-to-capture — user presses a physical key and it is set
+  4. Confirming edits marks the macro dirty (unsaved indicator appears)
+  5. Cancelling the dialog leaves the block unchanged
+  6. LoopEnd blocks do not open a dialog on double-click
+
+Plans: 2 plans
+
+Plans:
+- [ ] 08-01-PLAN.md � block_edit_dialog.py: all per-type edit dialogs, KeyCaptureField, paired MouseClick sync
+- [ ] 08-02-PLAN.md � EditorPanel double-click wiring + human verify
