@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-last_updated: "2026-03-04T10:33:26.033Z"
+last_updated: "2026-03-04T10:34:30.314Z"
 progress:
   total_phases: 9
   completed_phases: 6
   total_plans: 32
-  completed_plans: 29
+  completed_plans: 30
 ---
 
 # Project State
@@ -18,14 +18,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-02-25)
 
 **Core value:** Exact mouse movement replay with a non-painful editor — record once, tune the timing, loop it.
-**Current focus:** Phase 8 — Block Edit Dialog
+**Current focus:** Phase 9 — QA Pass
 
 ## Current Position
 
-Phase: 8 of 8 (Block Edit Dialog)
-Plan: 1 of N in current phase (IN PROGRESS)
+Phase: 9 of 9 (QA Pass)
+Plan: 2 of 3 in current phase (IN PROGRESS)
 Status: In Progress
-Last activity: 2026-03-04 — Plan 08-01 complete (block_edit_dialog.py with all per-type edit dialogs, KeyCaptureField, open_edit_dialog dispatcher)
+Last activity: 2026-03-04 — Plan 09-01 complete (stale sentinel guard + stop-key release suppression, 10 regression tests)
 
 Progress: [██████████] 100%
 
@@ -70,6 +70,7 @@ Progress: [██████████] 100%
 | Phase 07-loop-blocks P01 | 94s | 2 tasks | 4 files |
 | Phase 08-block-edit-dialog P01 | 4 min | 1 task | 1 file |
 | Phase 09-qa-pass P02 | 3min | 1 tasks | 1 files |
+| Phase 09-qa-pass P01 | 1.5 min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -125,6 +126,8 @@ Recent decisions affecting current work:
 - [Phase 08-01]: _find_click_partner scans forward for "up" partner when editing "down" MouseClickBlock, backward when editing "up"; matches on button field
 - [Phase 08-01]: All block edit dialogs write to block only in accept() — Cancel leaves block fields unchanged (Pattern 2)
 - [Phase 09-qa-pass]: Removed dead duplicate LoopStart/LoopEnd handlers (lines 233-255) from engine; WindowFocusBlock always continues before them
+- [Phase 09-qa-pass]: Guard sentinel branch on AppState.PLAYING so stale sentinel does not clear amber cursor after hotkey stop
+- [Phase 09-qa-pass]: _stop_key_consumed bool flag suppresses stop-key release in RecorderService _on_release
 
 ### Roadmap Evolution
 
