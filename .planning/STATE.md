@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-last_updated: "2026-03-03T09:41:07.825Z"
+last_updated: "2026-03-04T10:33:26.033Z"
 progress:
-  total_phases: 7
-  completed_phases: 5
-  total_plans: 27
-  completed_plans: 24
+  total_phases: 9
+  completed_phases: 6
+  total_plans: 32
+  completed_plans: 29
 ---
 
 # Project State
@@ -69,6 +69,7 @@ Progress: [██████████] 100%
 | Phase 05-record-logic-adaptation-and-fixes P03 | 5 min | 2 tasks | 3 files |
 | Phase 07-loop-blocks P01 | 94s | 2 tasks | 4 files |
 | Phase 08-block-edit-dialog P01 | 4 min | 1 task | 1 file |
+| Phase 09-qa-pass P02 | 3min | 1 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -123,6 +124,7 @@ Recent decisions affecting current work:
 - [Phase 08-01]: KeyCaptureField stores pynput single-key format (no modifier combos) — distinct from HotkeyField which supports modifier combos like ctrl+a
 - [Phase 08-01]: _find_click_partner scans forward for "up" partner when editing "down" MouseClickBlock, backward when editing "up"; matches on button field
 - [Phase 08-01]: All block edit dialogs write to block only in accept() — Cancel leaves block fields unchanged (Pattern 2)
+- [Phase 09-qa-pass]: Removed dead duplicate LoopStart/LoopEnd handlers (lines 233-255) from engine; WindowFocusBlock always continues before them
 
 ### Roadmap Evolution
 
