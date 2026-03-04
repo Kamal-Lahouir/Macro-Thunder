@@ -220,7 +220,10 @@ class MainWindow(QMainWindow):
             except queue.Empty:
                 break
             if idx == -1 and total == -1:
-                self._stop_play(clear_cursor=True)  # natural completion
+                # Only act on natural completion when still playing.
+                # If hotkey already stopped playback, discard the stale sentinel.
+                if self._state == AppState.PLAYING:
+                    self._stop_play(clear_cursor=True)
                 break
             else:
                 self._toolbar_widget.set_playback_progress(idx + 1, total)
