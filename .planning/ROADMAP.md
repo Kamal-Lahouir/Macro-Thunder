@@ -204,8 +204,8 @@ Scope:
 Plans: 2 plans
 
 Plans:
-- [ ] 08-01-PLAN.md � block_edit_dialog.py: all per-type edit dialogs, KeyCaptureField, paired MouseClick sync
-- [ ] 08-02-PLAN.md � EditorPanel double-click wiring + human verify
+- [ ] 08-01-PLAN.md — block_edit_dialog.py: all per-type edit dialogs, KeyCaptureField, paired MouseClick sync
+- [ ] 08-02-PLAN.md — EditorPanel double-click wiring + human verify
 
 ### Phase 9: QA Pass — Bug Fixes and Polish
 
@@ -226,4 +226,9 @@ Scope:
   4. A macro with Label/Goto loops executes the correct number of iterations without hanging
   5. No button state mismatches (e.g., Play button shows active when IDLE, or toolbar blink persists after stop)
 
-Plans: TBD
+**Plans**: 3 plans
+
+Plans:
+- [ ] 09-01-PLAN.md — Fix stale sentinel (amber cursor) + stop-key recording residue + regression tests
+- [ ] 09-02-PLAN.md — Remove dead duplicate LoopStart/LoopEnd engine handlers
+- [ ] 09-03-PLAN.md — Human verify: all 5 success criteria smoke-tested end-to-end
