@@ -106,9 +106,10 @@ class EditorPanel(QFrame):
         self._model = BlockTableModel(doc)
         self._model.document_modified.connect(self.document_modified)
         self._table.setModel(self._model)
-        self._table.setColumnWidth(0, 200)
-        self._table.setColumnWidth(1, 250)
-        self._table.setColumnWidth(2, 100)
+        self._table.setColumnWidth(0, 40)   # ID
+        self._table.setColumnWidth(1, 200)  # Type
+        self._table.setColumnWidth(2, 250)  # Value
+        self._table.setColumnWidth(3, 100)  # Timestamp
         self._table.selectionModel().selectionChanged.connect(self._on_selection_changed)
         self._update_button_state()
 

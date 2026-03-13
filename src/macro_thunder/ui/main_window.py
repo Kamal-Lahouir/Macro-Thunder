@@ -226,7 +226,13 @@ class MainWindow(QMainWindow):
                     self._stop_play(clear_cursor=True)
                 break
             else:
-                self._toolbar_widget.set_playback_progress(idx + 1, total)
+                model = self._editor_panel._model
+                if model is not None:
+                    step_id = model.step_id_for_flat(idx)
+                    total_steps = model.total_step_ids()
+                else:
+                    step_id, total_steps = idx + 1, total
+                self._toolbar_widget.set_playback_progress(step_id, total_steps)
                 self._editor_panel.set_playback_row(idx)
 
         # Drain loop detection notifications

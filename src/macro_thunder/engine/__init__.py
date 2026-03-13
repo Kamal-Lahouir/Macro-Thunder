@@ -145,6 +145,16 @@ class PlaybackEngine:
             progress_since_last_goto = False
             loop_stack: list[tuple[int, int]] = []  # (loop_start_index, remaining)
 
+            # When resuming mid-recording, initialize prev_ts to the timestamp of the
+            # first action block at start_index so it fires immediately instead of
+            # waiting out all the elapsed recording time from the beginning.
+            if i > 0 and iteration == 0:
+                for k in range(i, len(blocks)):
+                    b = blocks[k]
+                    if hasattr(b, "timestamp"):
+                        prev_ts = b.timestamp
+                        break
+
             while i < len(blocks):
                 if self._stop_event.is_set():
                     return

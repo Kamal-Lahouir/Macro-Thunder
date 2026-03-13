@@ -122,11 +122,12 @@ def _rescale_group_coords(
 # ---------------------------------------------------------------------------
 # Column indices
 # ---------------------------------------------------------------------------
-COL_TYPE = 0
-COL_VALUE = 1
-COL_TIMESTAMP = 2
-COL_EXTRA = 3
-_NUM_COLS = 4
+COL_ID = 0
+COL_TYPE = 1
+COL_VALUE = 2
+COL_TIMESTAMP = 3
+COL_EXTRA = 4
+_NUM_COLS = 5
 
 
 def _block_value(block: ActionBlock) -> str:
@@ -194,6 +195,9 @@ if _QT_AVAILABLE:
             # expanded state keyed by flat_start of group
             self._expanded: Dict[int, bool] = {}
             self._display_rows: List[DisplayRow] = []
+            self._display_ids: List[int] = []
+            self._flat_to_id: Dict[int, int] = {}
+            self._total_step_ids: int = 0
             self._rebuild_display_rows()
 
         # ------------------------------------------------------------------
@@ -253,6 +257,30 @@ if _QT_AVAILABLE:
                     i += 1
             self._display_rows = rows
 
+            # Build step IDs: counter increments for every row except GroupChildRow
+            # (which shares its parent group's ID).
+            display_ids: List[int] = []
+            flat_to_id: Dict[int, int] = {}
+            counter = 0
+            for row in rows:
+                if isinstance(row, GroupChildRow):
+                    group_id = flat_to_id.get(row.group_flat_start, counter)
+                    display_ids.append(group_id)
+                    flat_to_id[row.flat_index] = group_id
+                else:
+                    counter += 1
+                    display_ids.append(counter)
+                    if isinstance(row, BlockRow):
+                        flat_to_id[row.flat_index] = counter
+                    elif isinstance(row, GroupHeaderRow):
+                        for fi in range(row.flat_start, row.flat_end + 1):
+                            flat_to_id[fi] = counter
+                    elif isinstance(row, (LoopHeaderRow, LoopFooterRow, LoopChildRow)):
+                        flat_to_id[row.flat_index] = counter
+            self._display_ids = display_ids
+            self._flat_to_id = flat_to_id
+            self._total_step_ids = counter
+
         # ------------------------------------------------------------------
         # Playback highlight
         # ------------------------------------------------------------------
@@ -288,6 +316,14 @@ if _QT_AVAILABLE:
             """Remove the playback highlight."""
             self.set_playback_flat_index(-1)
 
+        def step_id_for_flat(self, flat_index: int) -> int:
+            """Return the step ID for a given flat block index (1-based)."""
+            return self._flat_to_id.get(flat_index, 0)
+
+        def total_step_ids(self) -> int:
+            """Return the total number of step IDs (excludes group child rows)."""
+            return self._total_step_ids
+
         # ------------------------------------------------------------------
         # QAbstractTableModel interface
         # ------------------------------------------------------------------
@@ -306,7 +342,7 @@ if _QT_AVAILABLE:
             if role != Qt.ItemDataRole.DisplayRole:
                 return None
             if orientation == Qt.Orientation.Horizontal:
-                return ["Type", "Value", "Timestamp", "Extra"][section]
+                return ["ID", "Type", "Value", "Timestamp", "Extra"][section]
             return str(section + 1)
 
         def data(self, index, role=Qt.ItemDataRole.DisplayRole):
@@ -359,6 +395,9 @@ if _QT_AVAILABLE:
             row_obj = self._display_rows[index.row()]
             col = index.column()
             blocks = self._doc.blocks
+
+            if col == COL_ID:
+                return str(self._display_ids[index.row()])
 
             if isinstance(row_obj, BlockRow):
                 block = blocks[row_obj.flat_index]
