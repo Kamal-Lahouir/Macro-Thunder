@@ -72,14 +72,17 @@ class _LibraryItemDelegate(QStyledItemDelegate):
 
         cx = icon_rect_x + 36
 
-        # Name
+        # Name (elide if too long)
         name = index.data(Qt.ItemDataRole.DisplayRole) or ""
         name_font = QFont("Segoe UI", 10, QFont.Weight.DemiBold)
         painter.setFont(name_font)
-        painter.setPen(QColor(_TEXT if is_sel else _TEXT))
-        painter.drawText(cx, rect.top() + 8, rect.right() - cx - 8, 18,
+        painter.setPen(QColor(_TEXT))
+        name_w = rect.right() - cx - 8
+        fm = painter.fontMetrics()
+        elided = fm.elidedText(name, Qt.TextElideMode.ElideRight, name_w)
+        painter.drawText(cx, rect.top() + 8, name_w, 18,
                          Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
-                         name)
+                         elided)
 
         # Sub-label (pinned or blank)
         is_pinned = bool(index.data(Qt.ItemDataRole.UserRole + 1))
@@ -107,7 +110,6 @@ class LibraryPanel(QFrame):
         self._order: list[str] = []
 
         self.setMinimumWidth(200)
-        self.setMaximumWidth(320)
 
         root = QVBoxLayout(self)
         root.setContentsMargins(0, 0, 0, 0)
@@ -141,6 +143,7 @@ class LibraryPanel(QFrame):
 
         self._list_widget = QListWidget()
         self._list_widget.setObjectName("SidebarList")
+        self._list_widget.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self._list_widget.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self._list_widget.customContextMenuRequested.connect(self._show_context_menu)
         self._list_widget.setDragDropMode(QListWidget.DragDropMode.InternalMove)
