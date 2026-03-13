@@ -7,7 +7,7 @@ from pathlib import Path
 from PyQt6.QtCore import Qt, pyqtSignal, QSize
 from PyQt6.QtGui import QColor, QPainter, QFont, QPen, QPainterPath
 from PyQt6.QtWidgets import (
-    QFrame, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit,
+    QFrame, QVBoxLayout, QLabel, QLineEdit,
     QListWidget, QListWidgetItem, QMenu, QMessageBox,
     QPushButton, QInputDialog, QStyledItemDelegate, QStyle, QWidget,
 )
@@ -113,47 +113,24 @@ class LibraryPanel(QFrame):
         root.setContentsMargins(0, 0, 0, 0)
         root.setSpacing(0)
 
-        # ── Top section ───────────────────────────────────────────────────
-        top = QWidget()
-        top.setStyleSheet("background-color: #0a1218; border-bottom: 1px solid #1e2d37;")
-        top_layout = QVBoxLayout(top)
-        top_layout.setContentsMargins(12, 12, 12, 12)
-        top_layout.setSpacing(8)
-
-        # App icon + name row
-        brand_row = QHBoxLayout()
-        brand_lbl = QLabel("⚡  Macro Engine")
-        brand_lbl.setStyleSheet(
-            "color: #25aff4; font-weight: 700; font-size: 13px; background: transparent;"
-        )
-        brand_row.addWidget(brand_lbl)
-        brand_row.addStretch()
-        top_layout.addLayout(brand_row)
+        # ── Library list ──────────────────────────────────────────────────
+        mid = QWidget()
+        mid_layout = QVBoxLayout(mid)
+        mid_layout.setContentsMargins(8, 10, 8, 0)
+        mid_layout.setSpacing(6)
 
         # New Macro button
         self._btn_new = QPushButton("＋  New Macro")
         self._btn_new.setProperty("role", "new_macro")
-        self._btn_new.setFixedHeight(36)
+        self._btn_new.setFixedHeight(32)
         self._btn_new.clicked.connect(self._on_new_macro)
-        top_layout.addWidget(self._btn_new)
+        mid_layout.addWidget(self._btn_new)
 
         # Search box
         self._search_box = QLineEdit()
         self._search_box.setPlaceholderText("Search library...")
-        self._search_box.setStyleSheet(
-            "background-color: #0c141a; border: 1px solid #1e2d37; border-radius: 8px;"
-            "color: #e2e8f0; padding: 6px 10px; font-size: 12px;"
-        )
         self._search_box.textChanged.connect(self._on_search)
-        top_layout.addWidget(self._search_box)
-
-        root.addWidget(top)
-
-        # ── Library list ──────────────────────────────────────────────────
-        mid = QWidget()
-        mid_layout = QVBoxLayout(mid)
-        mid_layout.setContentsMargins(8, 8, 8, 0)
-        mid_layout.setSpacing(4)
+        mid_layout.addWidget(self._search_box)
 
         section_lbl = QLabel("LIBRARY")
         section_lbl.setStyleSheet(
