@@ -15,7 +15,8 @@ from PyQt6.QtWidgets import (
     QMessageBox,
     QSplitter,
     QLabel,
-    QToolBar,
+    QVBoxLayout,
+    QWidget,
     QSystemTrayIcon,
     QMenu,
 )
@@ -24,7 +25,8 @@ from PyQt6.QtGui import QAction, QCursor, QColor, QPixmap, QIcon
 
 from macro_thunder.ui.library_panel import LibraryPanel
 from macro_thunder.ui.editor_panel import EditorPanel
-from macro_thunder.ui.toolbar import ToolbarPanel
+from macro_thunder.ui.header_bar import HeaderBar
+from macro_thunder.ui.styles import APP_STYLESHEET
 from macro_thunder.ui.settings_dialog import SettingsDialog
 from macro_thunder.ui.window_picker import WindowPickerService
 from macro_thunder.recorder import RecorderService
@@ -47,15 +49,13 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.setWindowTitle("Althar")
         self.resize(1200, 700)
+        self.setStyleSheet(APP_STYLESHEET)
 
         # Load settings
         self._settings = AppSettings.load()
 
-        # Toolbar row at top
-        self._toolbar_widget = ToolbarPanel()
-        toolbar = QToolBar("Main Toolbar")
-        toolbar.addWidget(self._toolbar_widget)
-        self.addToolBar(toolbar)
+        # Header bar at top (replaces QToolBar + ToolbarPanel)
+        self._toolbar_widget = HeaderBar()
 
         # Central area: horizontal splitter (library | editor)
         self._splitter = QSplitter(Qt.Orientation.Horizontal)
@@ -79,7 +79,14 @@ class MainWindow(QMainWindow):
         self._library_panel.load_requested.connect(self._on_library_load)
         self._library_panel.save_requested.connect(self._save_macro)
 
-        self.setCentralWidget(self._splitter)
+        # Embed header bar + splitter in central widget
+        central = QWidget()
+        central_layout = QVBoxLayout(central)
+        central_layout.setContentsMargins(0, 0, 0, 0)
+        central_layout.setSpacing(0)
+        central_layout.addWidget(self._toolbar_widget)
+        central_layout.addWidget(self._splitter, stretch=1)
+        self.setCentralWidget(central)
 
         # Status bar with live coordinate readout + click mode label
         self._coord_label = QLabel("X: 0  Y: 0")
@@ -180,6 +187,7 @@ class MainWindow(QMainWindow):
         self._toolbar_widget.stop_record_requested.connect(self._stop_record)
         self._toolbar_widget.play_requested.connect(self._start_play)
         self._toolbar_widget.stop_play_requested.connect(self._stop_play)
+        self._toolbar_widget.settings_requested.connect(self._open_settings)
 
         # Connect hotkey signals
         self._hotkeys.start_record.connect(self._start_record)
@@ -514,6 +522,10 @@ class MainWindow(QMainWindow):
         self._library_panel.set_dirty(True)
 
     def _on_library_load(self, path: str) -> None:
+        if not path:
+            # Empty string is the "New Macro" sentinel from LibraryPanel
+            self._new_macro()
+            return
         doc = load_macro(pathlib.Path(path))
         self._load_document(doc)
 
