@@ -3,18 +3,9 @@ from __future__ import annotations
 
 from PyQt6.QtWidgets import (
     QWidget, QHBoxLayout, QVBoxLayout, QLabel, QPushButton,
-    QSlider, QSpinBox, QFrame,
+    QSlider, QSpinBox, QDoubleSpinBox, QFrame,
 )
 from PyQt6.QtCore import Qt, QTimer, pyqtSignal
-
-
-class _SpeedShim:
-    """Lets main_window.py call _speed_spin.value() unchanged."""
-    def __init__(self, slider: QSlider) -> None:
-        self._slider = slider
-
-    def value(self) -> float:
-        return self._slider.value() / 10.0
 
 
 class HeaderBar(QWidget):
@@ -158,29 +149,40 @@ class HeaderBar(QWidget):
         self._speed_slider = QSlider(Qt.Orientation.Horizontal)
         self._speed_slider.setRange(1, 50)   # ÷10 → 0.1x … 5.0x
         self._speed_slider.setValue(10)
-        self._speed_slider.setFixedWidth(90)
+        self._speed_slider.setFixedWidth(80)
         self._speed_slider.setToolTip("Playback speed")
-        self._speed_slider.valueChanged.connect(self._on_speed_changed)
+        self._speed_slider.valueChanged.connect(self._on_slider_speed_changed)
 
-        self._speed_val_lbl = QLabel("1.0×")
-        self._speed_val_lbl.setStyleSheet(
-            "color:#e2e8f0;font-size:11px;font-weight:600;"
-            "min-width:30px;background:transparent;"
-        )
+        # Direct numeric input — bidirectionally synced with the slider
+        self._speed_spin = QDoubleSpinBox()
+        self._speed_spin.setRange(0.1, 5.0)
+        self._speed_spin.setSingleStep(0.1)
+        self._speed_spin.setValue(1.0)
+        self._speed_spin.setDecimals(1)
+        self._speed_spin.setFixedWidth(58)
+        self._speed_spin.setSuffix("×")
+        self._speed_spin.valueChanged.connect(self._on_spinbox_speed_changed)
+
         hl.addWidget(self._speed_slider)
-        hl.addWidget(self._speed_val_lbl)
+        hl.addWidget(self._speed_spin)
         col.layout().addWidget(row)
-
-        # Compatibility shim so main_window._speed_spin.value() still works
-        self._speed_spin = _SpeedShim(self._speed_slider)
         return col
 
     def _on_play_clicked(self) -> None:
         repeat = -1 if self._chk_infinite.isChecked() else self._spin_repeat.value()
         self.play_requested.emit(self._speed_spin.value(), repeat)
 
-    def _on_speed_changed(self, val: int) -> None:
-        self._speed_val_lbl.setText(f"{val / 10.0:.1f}×")
+    def _on_slider_speed_changed(self, val: int) -> None:
+        # Slider → spinbox (block spinbox signal to avoid loop)
+        self._speed_spin.blockSignals(True)
+        self._speed_spin.setValue(val / 10.0)
+        self._speed_spin.blockSignals(False)
+
+    def _on_spinbox_speed_changed(self, val: float) -> None:
+        # Spinbox → slider (block slider signal to avoid loop)
+        self._speed_slider.blockSignals(True)
+        self._speed_slider.setValue(round(val * 10))
+        self._speed_slider.blockSignals(False)
 
     def _toggle_blink(self) -> None:
         self._blink_visible = not self._blink_visible

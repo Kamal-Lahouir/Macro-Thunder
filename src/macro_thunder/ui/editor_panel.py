@@ -1,11 +1,11 @@
-"""EditorPanel — block editor panel using card-based QListView (Phase 3 rework)."""
+"""EditorPanel — block editor panel with QTableView + card-style delegate."""
 from __future__ import annotations
 
 from PyQt6.QtWidgets import (
     QFrame, QVBoxLayout, QHBoxLayout, QPushButton,
-    QListView, QAbstractItemView, QWidget, QMenu, QSizePolicy,
+    QTableView, QAbstractItemView, QWidget, QMenu, QHeaderView,
 )
-from PyQt6.QtCore import pyqtSignal, Qt, QModelIndex
+from PyQt6.QtCore import pyqtSignal, Qt
 
 from macro_thunder.models.view_model import (
     BlockTableModel, BlockRow, GroupHeaderRow, GroupChildRow,
@@ -13,13 +13,13 @@ from macro_thunder.models.view_model import (
 )
 from macro_thunder.models.document import MacroDocument
 from macro_thunder.models.blocks import LabelBlock, GotoBlock, WindowFocusBlock, LoopStartBlock
-from macro_thunder.ui.block_card_delegate import BlockCardDelegate
+from macro_thunder.ui.block_delegate import BlockDelegate
 from macro_thunder.ui.block_type_dialog import BlockTypeDialog
 from macro_thunder.ui.block_panels import LabelPanel, GotoPanel, WindowFocusPanel, LoopStartPanel
 
 
 class EditorPanel(QFrame):
-    """Central block-editor panel: card list view + action toolbar."""
+    """Central block-editor panel: table view + toolbar."""
 
     document_modified     = pyqtSignal()
     record_here_requested = pyqtSignal(int)
@@ -39,55 +39,51 @@ class EditorPanel(QFrame):
         toolbar_layout.setContentsMargins(16, 8, 16, 8)
         toolbar_layout.setSpacing(6)
 
-        self._btn_delete = QPushButton("✕ Delete")
-        self._btn_up     = QPushButton("▲ Up")
-        self._btn_down   = QPushButton("▼ Down")
+        self._btn_delete      = QPushButton("✕ Delete")
+        self._btn_up          = QPushButton("▲ Up")
+        self._btn_down        = QPushButton("▼ Down")
+        self._btn_add         = QPushButton("＋ Add Block")
         self._btn_record_here = QPushButton("⏺ Record Here")
         self._btn_record_here.setToolTip(
             "Start recording and insert new blocks after the selected row"
         )
-
-        for btn in [self._btn_delete, self._btn_up, self._btn_down]:
-            btn.setFixedHeight(30)
-        self._btn_record_here.setFixedHeight(30)
         self._btn_record_here.setProperty("role", "record")
+
+        for btn in [self._btn_delete, self._btn_up, self._btn_down,
+                    self._btn_add, self._btn_record_here]:
+            btn.setFixedHeight(30)
 
         toolbar_layout.addWidget(self._btn_delete)
         toolbar_layout.addWidget(self._btn_up)
         toolbar_layout.addWidget(self._btn_down)
         toolbar_layout.addStretch()
         toolbar_layout.addWidget(self._btn_record_here)
+        toolbar_layout.addWidget(self._btn_add)
 
-        # ── List view (card-based) ────────────────────────────────────────
-        self._table = QListView()          # named _table for API compat
-        self._table.setObjectName("StepList")
+        # ── Table view ────────────────────────────────────────────────────
+        self._table = QTableView()
         self._table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self._table.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
         self._table.setDragDropMode(QAbstractItemView.DragDropMode.InternalMove)
         self._table.setDragDropOverwriteMode(False)
         self._table.setDropIndicatorShown(True)
-        self._table.setUniformItemSizes(False)
-        self._table.setSpacing(0)
-
-        # Give the scroll area a dark background that matches cards
-        self._table.setStyleSheet(
-            "QListView { background-color: #0c141a; }"
-            "QListView::item { background: transparent; }"
+        self._table.horizontalHeader().setStretchLastSection(True)
+        self._table.verticalHeader().setVisible(False)
+        self._table.setAlternatingRowColors(False)
+        self._table.setShowGrid(False)
+        # Compact rows so many are visible at once
+        self._table.verticalHeader().setDefaultSectionSize(26)
+        self._table.verticalHeader().setSectionResizeMode(
+            QHeaderView.ResizeMode.Fixed
         )
 
-        self._delegate = BlockCardDelegate()
+        self._delegate = BlockDelegate()
         self._table.setItemDelegate(self._delegate)
         self._delegate.toggle_group_requested.connect(self._on_toggle_group)
 
         self._table.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self._table.customContextMenuRequested.connect(self._on_context_menu)
         self._table.doubleClicked.connect(self._on_double_click)
-
-        # ── "Insert Step" button at bottom ────────────────────────────────
-        self._btn_add = QPushButton("＋  INSERT STEP")
-        self._btn_add.setProperty("role", "add_step")
-        self._btn_add.setFixedHeight(52)
-        self._btn_add.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
 
         # ── Detail panel container ────────────────────────────────────────
         self._detail_container = QWidget()
@@ -98,15 +94,7 @@ class EditorPanel(QFrame):
 
         layout.addLayout(toolbar_layout)
         layout.addWidget(self._table, stretch=1)
-
-        # Bottom area: add button + detail panel with padding
-        bottom = QWidget()
-        bottom_layout = QVBoxLayout(bottom)
-        bottom_layout.setContentsMargins(12, 8, 12, 12)
-        bottom_layout.setSpacing(8)
-        bottom_layout.addWidget(self._btn_add)
-        bottom_layout.addWidget(self._detail_container)
-        layout.addWidget(bottom)
+        layout.addWidget(self._detail_container)
 
         # ── Connections ───────────────────────────────────────────────────
         self._btn_delete.clicked.connect(self._on_delete)
@@ -124,6 +112,10 @@ class EditorPanel(QFrame):
         self._model = BlockTableModel(doc)
         self._model.document_modified.connect(self.document_modified)
         self._table.setModel(self._model)
+        self._table.setColumnWidth(0, 40)    # ID
+        self._table.setColumnWidth(1, 190)   # Type
+        self._table.setColumnWidth(2, 240)   # Value
+        self._table.setColumnWidth(3, 90)    # Timestamp
         self._table.selectionModel().selectionChanged.connect(self._on_selection_changed)
         self._update_button_state()
 
@@ -133,12 +125,11 @@ class EditorPanel(QFrame):
     def select_flat_index(self, flat_index: int) -> None:
         if self._model is None:
             return
-        for dr in range(self._model.rowCount()):
-            row_obj = self._model.display_row(dr)
+        for display_row in range(self._model.rowCount()):
+            row_obj = self._model.display_row(display_row)
             if isinstance(row_obj, BlockRow) and row_obj.flat_index == flat_index:
-                idx = self._model.index(dr, 0)
-                self._table.setCurrentIndex(idx)
-                self._table.scrollTo(idx)
+                self._table.selectRow(display_row)
+                self._table.scrollTo(self._model.index(display_row, 0))
                 return
 
     def get_playback_row(self) -> int:
@@ -150,18 +141,20 @@ class EditorPanel(QFrame):
         if self._model is None:
             return
         self._model.set_playback_flat_index(flat_index)
-        for dr in range(self._model.rowCount()):
-            row_obj = self._model.display_row(dr)
+        for display_row in range(self._model.rowCount()):
+            row_obj = self._model.display_row(display_row)
             match = False
             if isinstance(row_obj, BlockRow) and row_obj.flat_index == flat_index:
                 match = True
-            elif isinstance(row_obj, GroupHeaderRow) and row_obj.flat_start <= flat_index <= row_obj.flat_end:
+            elif (isinstance(row_obj, GroupHeaderRow)
+                  and row_obj.flat_start <= flat_index <= row_obj.flat_end):
                 match = True
-            elif isinstance(row_obj, (GroupChildRow, LoopChildRow, LoopHeaderRow, LoopFooterRow)):
+            elif isinstance(row_obj, (GroupChildRow, LoopChildRow,
+                                       LoopHeaderRow, LoopFooterRow)):
                 if row_obj.flat_index == flat_index:
                     match = True
             if match:
-                self._table.scrollTo(self._model.index(dr, 0))
+                self._table.scrollTo(self._model.index(display_row, 0))
                 return
 
     def clear_playback_row(self) -> None:
@@ -176,10 +169,8 @@ class EditorPanel(QFrame):
     # ── Internal helpers ──────────────────────────────────────────────────
 
     def _selected_display_rows(self) -> list[int]:
-        sm = self._table.selectionModel()
-        if sm is None:
-            return []
-        return sorted({idx.row() for idx in sm.selectedIndexes()})
+        indexes = self._table.selectionModel().selectedRows()
+        return sorted({idx.row() for idx in indexes})
 
     def _selected_flat_end_index(self) -> int:
         if self._model is None:
@@ -200,7 +191,7 @@ class EditorPanel(QFrame):
             return row_obj.flat_index
         return -1
 
-    def _on_double_click(self, index: QModelIndex) -> None:
+    def _on_double_click(self, index) -> None:
         if self._model is None:
             return
         row_obj = self._model.display_row(index.row())
@@ -281,7 +272,8 @@ class EditorPanel(QFrame):
     def _wrap_selection_in_loop(self) -> None:
         if self._model is None:
             return
-        selected_rows = self._selected_display_rows()
+        selected_rows = [idx.row() for idx in self._table.selectedIndexes()
+                         if idx.column() == 0]
         if not selected_rows:
             return
         flat_indices: list[int] = []
