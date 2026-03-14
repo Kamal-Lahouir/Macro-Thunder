@@ -2,8 +2,8 @@
 from __future__ import annotations
 
 from PyQt6.QtWidgets import (
-    QFrame, QVBoxLayout, QHBoxLayout, QPushButton,
-    QTableView, QAbstractItemView, QWidget, QMenu, QHeaderView,
+    QFrame, QVBoxLayout,
+    QTableView, QAbstractItemView, QWidget, QMenu, QHeaderView, QProgressBar,
 )
 from PyQt6.QtCore import pyqtSignal, Qt
 
@@ -33,32 +33,6 @@ class EditorPanel(QFrame):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
-
-        # ── Top editor toolbar ────────────────────────────────────────────
-        toolbar_layout = QHBoxLayout()
-        toolbar_layout.setContentsMargins(16, 8, 16, 8)
-        toolbar_layout.setSpacing(6)
-
-        self._btn_delete      = QPushButton("✕ Delete")
-        self._btn_up          = QPushButton("▲ Up")
-        self._btn_down        = QPushButton("▼ Down")
-        self._btn_add         = QPushButton("＋ Add Block")
-        self._btn_record_here = QPushButton("⏺ Record Here")
-        self._btn_record_here.setToolTip(
-            "Start recording and insert new blocks after the selected row"
-        )
-        self._btn_record_here.setProperty("role", "record")
-
-        for btn in [self._btn_delete, self._btn_up, self._btn_down,
-                    self._btn_add, self._btn_record_here]:
-            btn.setFixedHeight(30)
-
-        toolbar_layout.addWidget(self._btn_delete)
-        toolbar_layout.addWidget(self._btn_up)
-        toolbar_layout.addWidget(self._btn_down)
-        toolbar_layout.addStretch()
-        toolbar_layout.addWidget(self._btn_record_here)
-        toolbar_layout.addWidget(self._btn_add)
 
         # ── Table view ────────────────────────────────────────────────────
         self._table = QTableView()
@@ -92,16 +66,18 @@ class EditorPanel(QFrame):
         self._detail_layout.setContentsMargins(12, 0, 12, 0)
         self._detail_container.hide()
 
-        layout.addLayout(toolbar_layout)
+        # ── Progress bar ──────────────────────────────────────────────────
+        self._progress_bar = QProgressBar()
+        self._progress_bar.setRange(0, 1)
+        self._progress_bar.setValue(0)
+        self._progress_bar.setTextVisible(True)
+        self._progress_bar.setFormat("Step %v / %m")
+        self._progress_bar.setFixedHeight(18)
+        self._progress_bar.hide()
+
         layout.addWidget(self._table, stretch=1)
         layout.addWidget(self._detail_container)
-
-        # ── Connections ───────────────────────────────────────────────────
-        self._btn_delete.clicked.connect(self._on_delete)
-        self._btn_up.clicked.connect(self._on_move_up)
-        self._btn_down.clicked.connect(self._on_move_down)
-        self._btn_add.clicked.connect(self._on_add_block)
-        self._btn_record_here.clicked.connect(self._on_record_here)
+        layout.addWidget(self._progress_bar)
 
         self._update_button_state()
 
@@ -118,6 +94,46 @@ class EditorPanel(QFrame):
         self._table.setColumnWidth(3, 90)    # Timestamp
         self._table.selectionModel().selectionChanged.connect(self._on_selection_changed)
         self._update_button_state()
+
+    # ── Public action API (called from ribbon) ────────────────────────────
+
+    def delete_selected(self) -> None:
+        self._on_delete()
+
+    def move_up(self) -> None:
+        self._on_move_up()
+
+    def move_down(self) -> None:
+        self._on_move_down()
+
+    def add_block(self) -> None:
+        self._on_add_block()
+
+    def edit_selected(self) -> None:
+        rows = self._selected_display_rows()
+        if not rows or self._model is None:
+            return
+        row_obj = self._model.display_row(rows[0])
+        if isinstance(row_obj, (GroupHeaderRow, LoopFooterRow)):
+            return
+        if isinstance(row_obj, BlockRow):
+            flat_index = row_obj.flat_index
+        elif isinstance(row_obj, (LoopHeaderRow, LoopChildRow, GroupChildRow)):
+            flat_index = row_obj.flat_index
+        else:
+            return
+        block = self._model._doc.blocks[flat_index]
+        from macro_thunder.ui.block_edit_dialog import open_edit_dialog
+        confirmed = open_edit_dialog(block, self._model._doc.blocks, self)
+        if confirmed:
+            self._model.beginResetModel()
+            self._model._rebuild_display_rows()
+            self._model.endResetModel()
+            self._model.document_modified.emit()
+            self.document_modified.emit()
+
+    def record_here(self) -> None:
+        self._on_record_here()
 
     def get_selected_flat_index(self) -> int:
         return self._selected_flat_end_index()
@@ -160,6 +176,15 @@ class EditorPanel(QFrame):
     def clear_playback_row(self) -> None:
         if self._model is not None:
             self._model.clear_playback_flat_index()
+        self._progress_bar.hide()
+
+    def set_progress(self, index: int, total: int) -> None:
+        if total > 0:
+            self._progress_bar.setRange(0, total)
+            self._progress_bar.setValue(index)
+            self._progress_bar.show()
+        else:
+            self._progress_bar.hide()
 
     def insert_blocks_at(self, flat_index: int, blocks: list) -> None:
         if self._model is None:
@@ -264,9 +289,19 @@ class EditorPanel(QFrame):
 
     def _on_context_menu(self, pos) -> None:
         menu = QMenu(self)
+        index = self._table.indexAt(pos)
+        toggle_action = None
+        if index.isValid() and self._model is not None:
+            row_obj = self._model.display_row(index.row())
+            if isinstance(row_obj, GroupHeaderRow):
+                label = "Collapse group" if row_obj.expanded else "Expand group"
+                toggle_action = menu.addAction(label)
+                menu.addSeparator()
         wrap_action = menu.addAction("Wrap selection in Loop")
         action = menu.exec(self._table.viewport().mapToGlobal(pos))
-        if action == wrap_action:
+        if action == toggle_action and toggle_action is not None:
+            self._on_toggle_group(index.row())
+        elif action == wrap_action:
             self._wrap_selection_in_loop()
 
     def _wrap_selection_in_loop(self) -> None:
@@ -323,7 +358,4 @@ class EditorPanel(QFrame):
         self._detail_container.hide()
 
     def _update_button_state(self) -> None:
-        enabled = self._model is not None
-        for btn in [self._btn_delete, self._btn_up, self._btn_down, self._btn_add]:
-            btn.setEnabled(enabled)
-        self._btn_record_here.setEnabled(True)
+        pass  # buttons now live in the ribbon

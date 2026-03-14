@@ -15,13 +15,33 @@ from PyQt6.QtWidgets import (
 _EXCLUDED = {"settings.json", "library_state.json"}
 
 _PIN_COLOR = "#f0a500"
-_PRIMARY   = "#25aff4"
-_TEXT      = "#e2e8f0"
-_MUTED     = "#64748b"
-_BORDER    = "#1e2d37"
-_HOVER     = "#1a2a34"
-_SEL_BG    = "#1a3a50"
-_SEL_BOR   = "#25aff4"
+
+# Default dark palette (mutable — updated by set_theme)
+_COLORS = {
+    "primary": "#25aff4",
+    "text":    "#e2e8f0",
+    "muted":   "#64748b",
+    "border":  "#1e2d37",
+    "hover":   "#1a2a34",
+    "card":    "#0e1520",
+    "sel_bg":  "#1a3a50",
+    "sel_bor": "#25aff4",
+    "icon_bg": "#1e2d37",
+}
+
+_DARK_COLORS = dict(_COLORS)
+
+_LIGHT_COLORS = {
+    "primary": "#0284c7",
+    "text":    "#0f172a",
+    "muted":   "#64748b",
+    "border":  "#cbd5e1",
+    "hover":   "#dde6ef",
+    "card":    "#ffffff",
+    "sel_bg":  "#dbeafe",
+    "sel_bor": "#0284c7",
+    "icon_bg": "#e2e8f0",
+}
 
 
 class _LibraryItemDelegate(QStyledItemDelegate):
@@ -34,18 +54,18 @@ class _LibraryItemDelegate(QStyledItemDelegate):
         painter.save()
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
 
-        is_sel = bool(option.state & QStyle.StateFlag.State_Selected)
+        c = _COLORS
+        is_sel   = bool(option.state & QStyle.StateFlag.State_Selected)
         is_hover = bool(option.state & QStyle.StateFlag.State_MouseOver)
 
         rect = option.rect.adjusted(4, 3, -4, -3)
 
-        # Background
         if is_sel:
-            bg, bord = QColor(_SEL_BG), QColor(_SEL_BOR)
+            bg, bord = QColor(c["sel_bg"]), QColor(c["sel_bor"])
         elif is_hover:
-            bg, bord = QColor(_HOVER), QColor(_BORDER)
+            bg, bord = QColor(c["hover"]), QColor(c["border"])
         else:
-            bg, bord = QColor("#0e1520"), QColor(_BORDER)
+            bg, bord = QColor(c["card"]), QColor(c["border"])
 
         path = QPainterPath()
         path.addRoundedRect(float(rect.x()), float(rect.y()),
@@ -54,17 +74,16 @@ class _LibraryItemDelegate(QStyledItemDelegate):
         painter.setPen(QPen(bord, 1))
         painter.drawPath(path)
 
-        # Folder icon circle
         icon_rect_x = rect.left() + 10
         icon_rect_y = rect.top() + (rect.height() - 28) // 2
         icon_r = QPainterPath()
         icon_r.addRoundedRect(float(icon_rect_x), float(icon_rect_y), 28.0, 28.0, 6, 6)
-        ic_bg = QColor(_PRIMARY if is_sel else "#1e2d37")
+        ic_bg = QColor(c["primary"] if is_sel else c["icon_bg"])
         ic_bg.setAlpha(60 if is_sel else 180)
         painter.fillPath(icon_r, ic_bg)
         icon_font = QFont("Segoe UI", 13)
         painter.setFont(icon_font)
-        painter.setPen(QColor(_PRIMARY if is_sel else _MUTED))
+        painter.setPen(QColor(c["primary"] if is_sel else c["muted"]))
         painter.drawText(
             icon_rect_x, icon_rect_y, 28, 28,
             Qt.AlignmentFlag.AlignCenter, "▶"
@@ -72,11 +91,10 @@ class _LibraryItemDelegate(QStyledItemDelegate):
 
         cx = icon_rect_x + 36
 
-        # Name (elide if too long)
         name = index.data(Qt.ItemDataRole.DisplayRole) or ""
         name_font = QFont("Segoe UI", 10, QFont.Weight.DemiBold)
         painter.setFont(name_font)
-        painter.setPen(QColor(_TEXT))
+        painter.setPen(QColor(c["text"]))
         name_w = rect.right() - cx - 8
         fm = painter.fontMetrics()
         elided = fm.elidedText(name, Qt.TextElideMode.ElideRight, name_w)
@@ -84,12 +102,11 @@ class _LibraryItemDelegate(QStyledItemDelegate):
                          Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
                          elided)
 
-        # Sub-label (pinned or blank)
         is_pinned = bool(index.data(Qt.ItemDataRole.UserRole + 1))
         sub = "Pinned" if is_pinned else ""
         sub_font = QFont("Segoe UI", 8)
         painter.setFont(sub_font)
-        painter.setPen(QColor(_PIN_COLOR if is_pinned else _MUTED))
+        painter.setPen(QColor(_PIN_COLOR if is_pinned else c["muted"]))
         painter.drawText(cx, rect.top() + 28, rect.right() - cx - 8, 14,
                          Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
                          sub)
@@ -159,16 +176,17 @@ class LibraryPanel(QFrame):
         root.addWidget(mid, stretch=1)
 
         # ── Save button at bottom ─────────────────────────────────────────
-        bottom = QWidget()
-        bottom.setStyleSheet("background-color: #0a1218; border-top: 1px solid #1e2d37;")
-        bot_layout = QVBoxLayout(bottom)
+        self._bottom = QWidget()
+        self._bottom.setObjectName("LibraryBottom")
+        bot_layout = QVBoxLayout(self._bottom)
         bot_layout.setContentsMargins(12, 10, 12, 12)
         save_btn = QPushButton("💾  Save Current Macro")
         save_btn.setProperty("role", "save")
         save_btn.setFixedHeight(34)
         save_btn.clicked.connect(self.save_requested.emit)
         bot_layout.addWidget(save_btn)
-        root.addWidget(bottom)
+        root.addWidget(self._bottom)
+        self._apply_bottom_style()
 
         self._load_state()
         self._refresh_list()
@@ -180,6 +198,18 @@ class LibraryPanel(QFrame):
 
     def refresh(self) -> None:
         self._refresh_list()
+
+    def set_theme(self, is_dark: bool) -> None:
+        _COLORS.update(_DARK_COLORS if is_dark else _LIGHT_COLORS)
+        self._apply_bottom_style()
+        self._list_widget.viewport().update()
+
+    def _apply_bottom_style(self) -> None:
+        c = _COLORS
+        self._bottom.setStyleSheet(
+            f"#LibraryBottom {{ background-color: {c['card']};"
+            f" border-top: 1px solid {c['border']}; }}"
+        )
 
     # ── State persistence ─────────────────────────────────────────────────
 

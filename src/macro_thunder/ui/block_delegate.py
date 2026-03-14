@@ -51,12 +51,4 @@ class BlockDelegate(QStyledItemDelegate):
         super().paint(painter, option, index)
 
     def editorEvent(self, event, model, option, index):
-        if (
-            event.type() == QEvent.Type.MouseButtonRelease
-            and index.column() == COL_TYPE
-        ):
-            row_data = model.data(index, Qt.ItemDataRole.UserRole)
-            if isinstance(row_data, GroupHeaderRow):
-                self.toggle_group_requested.emit(index.row())
-                return True  # consume event, don't start editor
         return super().editorEvent(event, model, option, index)

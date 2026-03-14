@@ -25,8 +25,8 @@ from PyQt6.QtGui import QAction, QCursor, QColor, QPixmap, QIcon
 
 from macro_thunder.ui.library_panel import LibraryPanel
 from macro_thunder.ui.editor_panel import EditorPanel
-from macro_thunder.ui.header_bar import HeaderBar
-from macro_thunder.ui.styles import APP_STYLESHEET
+from macro_thunder.ui.ribbon_bar import RibbonBar
+from macro_thunder.ui.styles import APP_STYLESHEET_DARK, APP_STYLESHEET_LIGHT
 from macro_thunder.ui.settings_dialog import SettingsDialog
 from macro_thunder.ui.window_picker import WindowPickerService
 from macro_thunder.recorder import RecorderService
@@ -49,13 +49,13 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.setWindowTitle("Althar")
         self.resize(1200, 700)
-        self.setStyleSheet(APP_STYLESHEET)
+        self.setStyleSheet(APP_STYLESHEET_DARK)
 
         # Load settings
         self._settings = AppSettings.load()
 
         # Header bar at top (replaces QToolBar + ToolbarPanel)
-        self._toolbar_widget = HeaderBar()
+        self._toolbar_widget = RibbonBar()
 
         # Central area: horizontal splitter (library | editor)
         self._splitter = QSplitter(Qt.Orientation.Horizontal)
@@ -94,31 +94,23 @@ class MainWindow(QMainWindow):
         self._click_mode_label = QLabel("")
         self.statusBar().addPermanentWidget(self._click_mode_label)
 
-        # File menu
-        file_menu = self.menuBar().addMenu("&File")
-
-        new_action = QAction("&New Macro", self)
+        # Keyboard shortcuts (no menu bar needed — ribbon handles file/settings)
+        new_action = QAction(self)
         new_action.setShortcut("Ctrl+N")
         new_action.triggered.connect(self._new_macro)
-        file_menu.addAction(new_action)
+        self.addAction(new_action)
 
-        file_menu.addSeparator()
-
-        save_action = QAction("&Save Macro...", self)
+        save_action = QAction(self)
         save_action.setShortcut("Ctrl+S")
         save_action.triggered.connect(self._save_macro)
-        file_menu.addAction(save_action)
+        self.addAction(save_action)
 
-        open_action = QAction("&Open Macro...", self)
+        open_action = QAction(self)
         open_action.setShortcut("Ctrl+O")
         open_action.triggered.connect(self._open_macro)
-        file_menu.addAction(open_action)
+        self.addAction(open_action)
 
-        # Settings top-level menu
-        settings_menu = self.menuBar().addMenu("&Settings")
-        settings_action = QAction("&Preferences...", self)
-        settings_action.triggered.connect(self._open_settings)
-        settings_menu.addAction(settings_action)
+        self.menuBar().hide()
 
         # Services
         self._rec_queue: queue.Queue = queue.Queue()
@@ -180,7 +172,7 @@ class MainWindow(QMainWindow):
         self._picker_service.cancelled.connect(self._on_picker_cancelled)
 
         # Connect editor "Record Here" button
-        self._editor_panel.record_here_requested.connect(self._start_record_here)
+        # record_here_requested is now wired from ribbon, not editor panel
 
         # Connect toolbar signals
         self._toolbar_widget.record_requested.connect(self._start_record)
@@ -188,6 +180,18 @@ class MainWindow(QMainWindow):
         self._toolbar_widget.play_requested.connect(self._start_play)
         self._toolbar_widget.stop_play_requested.connect(self._stop_play)
         self._toolbar_widget.settings_requested.connect(self._open_settings)
+        self._toolbar_widget.theme_toggled.connect(self._on_theme_toggled)
+        self._toolbar_widget.new_macro_requested.connect(self._new_macro)
+        self._toolbar_widget.open_macro_requested.connect(self._open_macro)
+        self._toolbar_widget.save_macro_requested.connect(self._save_macro)
+        self._toolbar_widget.record_here_requested.connect(
+            lambda: self._start_record_here(self._editor_panel.get_selected_flat_index())
+        )
+        self._toolbar_widget.edit_requested.connect(self._editor_panel.edit_selected)
+        self._toolbar_widget.move_up_requested.connect(self._editor_panel.move_up)
+        self._toolbar_widget.move_down_requested.connect(self._editor_panel.move_down)
+        self._toolbar_widget.delete_requested.connect(self._editor_panel.delete_selected)
+        self._toolbar_widget.add_block_requested.connect(self._editor_panel.add_block)
 
         # Connect hotkey signals
         self._hotkeys.start_record.connect(self._start_record)
@@ -241,6 +245,7 @@ class MainWindow(QMainWindow):
                 else:
                     step_id, total_steps = idx + 1, total
                 self._toolbar_widget.set_playback_progress(step_id, total_steps)
+                self._editor_panel.set_progress(step_id, total_steps)
                 self._editor_panel.set_playback_row(idx)
 
         # Drain loop detection notifications
@@ -446,6 +451,7 @@ class MainWindow(QMainWindow):
         self._engine.stop()
         self._state = AppState.IDLE
         self._toolbar_widget.set_playback(False)
+        self._editor_panel.set_progress(0, 0)
         if clear_cursor:
             self._editor_panel.clear_playback_row()
             self._run_post_playback_action()
@@ -558,6 +564,11 @@ class MainWindow(QMainWindow):
             winsound.Beep(880, 120)
         except Exception:
             pass
+
+    def _on_theme_toggled(self, is_dark: bool) -> None:
+        sheet = APP_STYLESHEET_DARK if is_dark else APP_STYLESHEET_LIGHT
+        self.setStyleSheet(sheet)
+        self._library_panel.set_theme(is_dark)
 
     def _open_settings(self) -> None:
         dlg = SettingsDialog(self._settings, self)
