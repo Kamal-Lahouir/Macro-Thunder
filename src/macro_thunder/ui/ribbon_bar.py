@@ -4,8 +4,16 @@ from __future__ import annotations
 from PyQt6.QtWidgets import (
     QWidget, QHBoxLayout, QVBoxLayout, QLabel, QPushButton,
     QSlider, QSpinBox, QDoubleSpinBox, QFrame, QStackedWidget, QTabBar,
+    QApplication,
 )
 from PyQt6.QtCore import Qt, QTimer, pyqtSignal
+from PyQt6.QtGui import QIcon
+from PyQt6.QtWidgets import QStyle
+
+
+def _si(sp: QStyle.StandardPixmap) -> QIcon:
+    """Return a Qt standard icon."""
+    return QApplication.style().standardIcon(sp)
 
 
 class RibbonBar(QWidget):
@@ -44,16 +52,17 @@ class RibbonBar(QWidget):
         self._tab_bar.setObjectName("RibbonTabs")
         self._tab_bar.setDrawBase(False)
         self._tab_bar.setExpanding(False)
-        self._tab_bar.addTab("📁  Files")
-        self._tab_bar.addTab("⏺  Record")
-        self._tab_bar.addTab("✏  Edit")
-        self._tab_bar.addTab("▶  Playback")
-        self._tab_bar.addTab("⚙  Settings")
+        self._tab_bar.addTab("Files")
+        self._tab_bar.addTab("Record")
+        self._tab_bar.addTab("Edit")
+        self._tab_bar.addTab("Playback")
+        self._tab_bar.addTab("Settings")
         self._prev_tab = 0
 
-        self._btn_theme = QPushButton("☀")
+        self._btn_theme = QPushButton("Light")
         self._btn_theme.setObjectName("ThemeToggle")
-        self._btn_theme.setFixedSize(28, 28)
+        self._btn_theme.setFixedHeight(26)
+        self._btn_theme.setMinimumWidth(52)
         self._btn_theme.setToolTip("Switch to light mode")
         self._btn_theme.clicked.connect(self._on_theme_clicked)
         self._is_dark = True
@@ -102,17 +111,17 @@ class RibbonBar(QWidget):
         hl.setContentsMargins(12, 0, 12, 0)
         hl.setSpacing(6)
 
-        btn_new = QPushButton("＋  New")
+        btn_new = QPushButton(_si(QStyle.StandardPixmap.SP_FileIcon), "New")
         btn_new.setFixedHeight(32)
         btn_new.setToolTip("New macro (Ctrl+N)")
         btn_new.clicked.connect(self.new_macro_requested)
 
-        btn_open = QPushButton("📂  Open")
+        btn_open = QPushButton(_si(QStyle.StandardPixmap.SP_DirOpenIcon), "Open")
         btn_open.setFixedHeight(32)
         btn_open.setToolTip("Open macro (Ctrl+O)")
         btn_open.clicked.connect(self.open_macro_requested)
 
-        btn_save = QPushButton("💾  Save")
+        btn_save = QPushButton(_si(QStyle.StandardPixmap.SP_DialogSaveButton), "Save")
         btn_save.setFixedHeight(32)
         btn_save.setToolTip("Save macro (Ctrl+S)")
         btn_save.clicked.connect(self.save_macro_requested)
@@ -131,13 +140,13 @@ class RibbonBar(QWidget):
         hl.setContentsMargins(12, 0, 12, 0)
         hl.setSpacing(6)
 
-        self.btn_record = QPushButton("⏺  Record")
+        self.btn_record = QPushButton(_si(QStyle.StandardPixmap.SP_MediaRecord), "Record")
         self.btn_record.setProperty("role", "record")
         self.btn_record.setFixedHeight(32)
         self.btn_record.setToolTip("Start recording (F9)")
         self.btn_record.clicked.connect(self.record_requested)
 
-        self.btn_stop_record = QPushButton("⏹  Stop")
+        self.btn_stop_record = QPushButton(_si(QStyle.StandardPixmap.SP_MediaStop), "Stop")
         self.btn_stop_record.setFixedHeight(32)
         self.btn_stop_record.setToolTip("Stop recording (F10)")
         self.btn_stop_record.setEnabled(False)
@@ -156,7 +165,7 @@ class RibbonBar(QWidget):
         )
         self._block_count_label.hide()
 
-        btn_record_here = QPushButton("⏺  Record Here")
+        btn_record_here = QPushButton(_si(QStyle.StandardPixmap.SP_MediaRecord), "Record Here")
         btn_record_here.setProperty("role", "record")
         btn_record_here.setFixedHeight(32)
         btn_record_here.setToolTip("Insert recording after selected row")
@@ -182,42 +191,42 @@ class RibbonBar(QWidget):
         hl.setContentsMargins(12, 0, 12, 0)
         hl.setSpacing(6)
 
-        btn_edit = QPushButton("✏  Edit")
+        btn_edit = QPushButton(_si(QStyle.StandardPixmap.SP_FileDialogDetailedView), "Edit")
         btn_edit.setFixedHeight(32)
         btn_edit.setToolTip("Edit selected block")
         btn_edit.clicked.connect(self.edit_requested)
 
-        btn_up = QPushButton("▲  Up")
+        btn_up = QPushButton(_si(QStyle.StandardPixmap.SP_ArrowUp), "Up")
         btn_up.setFixedHeight(32)
         btn_up.setToolTip("Move selected block up")
         btn_up.clicked.connect(self.move_up_requested)
 
-        btn_down = QPushButton("▼  Down")
+        btn_down = QPushButton(_si(QStyle.StandardPixmap.SP_ArrowDown), "Down")
         btn_down.setFixedHeight(32)
         btn_down.setToolTip("Move selected block down")
         btn_down.clicked.connect(self.move_down_requested)
 
-        btn_delete = QPushButton("✕  Delete")
+        btn_delete = QPushButton(_si(QStyle.StandardPixmap.SP_TrashIcon), "Delete")
         btn_delete.setFixedHeight(32)
         btn_delete.setToolTip("Delete selected block(s)")
         btn_delete.clicked.connect(self.delete_requested)
 
-        btn_add = QPushButton("＋  Add Block")
-        btn_add.setFixedHeight(32)
-        btn_add.setToolTip("Insert a new block after selection")
-        btn_add.clicked.connect(self.add_block_requested)
-
-        btn_dup = QPushButton("⎘  Duplicate")
+        btn_dup = QPushButton(_si(QStyle.StandardPixmap.SP_FileDialogNewFolder), "Duplicate")
         btn_dup.setFixedHeight(32)
         btn_dup.setToolTip("Duplicate selected block(s)")
         btn_dup.clicked.connect(self.duplicate_requested)
 
-        btn_undo = QPushButton("↩  Undo")
+        btn_add = QPushButton(_si(QStyle.StandardPixmap.SP_FileDialogNewFolder), "Add Block")
+        btn_add.setFixedHeight(32)
+        btn_add.setToolTip("Insert a new block after selection")
+        btn_add.clicked.connect(self.add_block_requested)
+
+        btn_undo = QPushButton(_si(QStyle.StandardPixmap.SP_ArrowBack), "Undo")
         btn_undo.setFixedHeight(32)
         btn_undo.setToolTip("Undo last edit (Ctrl+Z)")
         btn_undo.clicked.connect(self.undo_requested)
 
-        btn_redo = QPushButton("↪  Redo")
+        btn_redo = QPushButton(_si(QStyle.StandardPixmap.SP_ArrowForward), "Redo")
         btn_redo.setFixedHeight(32)
         btn_redo.setToolTip("Redo (Ctrl+Y)")
         btn_redo.clicked.connect(self.redo_requested)
@@ -243,13 +252,13 @@ class RibbonBar(QWidget):
         hl.setContentsMargins(12, 0, 0, 0)
         hl.setSpacing(6)
 
-        self.btn_play = QPushButton("▶  Play")
+        self.btn_play = QPushButton(_si(QStyle.StandardPixmap.SP_MediaPlay), "Play")
         self.btn_play.setProperty("role", "play")
         self.btn_play.setFixedHeight(32)
         self.btn_play.setToolTip("Play macro (F6)")
         self.btn_play.clicked.connect(self._on_play_clicked)
 
-        self.btn_stop_play = QPushButton("⏹  Stop")
+        self.btn_stop_play = QPushButton(_si(QStyle.StandardPixmap.SP_MediaStop), "Stop")
         self.btn_stop_play.setFixedHeight(32)
         self.btn_stop_play.setToolTip("Stop playback (F8)")
         self.btn_stop_play.setEnabled(False)
@@ -285,7 +294,7 @@ class RibbonBar(QWidget):
         self._spin_repeat.setFixedHeight(28)
         self._spin_repeat.setToolTip("Repeat count")
 
-        self._chk_infinite = QPushButton("∞  Loop")
+        self._chk_infinite = QPushButton("Loop")
         self._chk_infinite.setProperty("role", "toggle")
         self._chk_infinite.setCheckable(True)
         self._chk_infinite.setFixedHeight(28)
@@ -336,10 +345,10 @@ class RibbonBar(QWidget):
     def _on_theme_clicked(self) -> None:
         self._is_dark = not self._is_dark
         if self._is_dark:
-            self._btn_theme.setText("☀")
+            self._btn_theme.setText("Light")
             self._btn_theme.setToolTip("Switch to light mode")
         else:
-            self._btn_theme.setText("🌙")
+            self._btn_theme.setText("Dark")
             self._btn_theme.setToolTip("Switch to dark mode")
         self.theme_toggled.emit(self._is_dark)
 
