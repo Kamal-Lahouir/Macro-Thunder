@@ -11,6 +11,7 @@ They mutate blocks in-place and are called by BlockTableModel.setData().
 """
 from __future__ import annotations
 
+import copy
 from dataclasses import dataclass
 from typing import Union, List, Tuple, Dict
 
@@ -188,6 +189,8 @@ if _QT_AVAILABLE:
 
         document_modified = pyqtSignal()
 
+        _MAX_UNDO = 50
+
         def __init__(self, doc, parent=None):
             super().__init__(parent)
             self._doc = doc
@@ -198,6 +201,8 @@ if _QT_AVAILABLE:
             self._display_ids: List[int] = []
             self._flat_to_id: Dict[int, int] = {}
             self._total_step_ids: int = 0
+            self._undo_stack: List[List] = []
+            self._redo_stack: List[List] = []
             self._rebuild_display_rows()
 
         # ------------------------------------------------------------------
@@ -280,6 +285,42 @@ if _QT_AVAILABLE:
             self._display_ids = display_ids
             self._flat_to_id = flat_to_id
             self._total_step_ids = counter
+
+        # ------------------------------------------------------------------
+        # Undo / Redo
+        # ------------------------------------------------------------------
+
+        def _push_undo(self) -> None:
+            """Snapshot current blocks onto undo stack; clear redo."""
+            snapshot = copy.deepcopy(self._doc.blocks)
+            self._undo_stack.append(snapshot)
+            if len(self._undo_stack) > self._MAX_UNDO:
+                self._undo_stack.pop(0)
+            self._redo_stack.clear()
+
+        def undo(self) -> bool:
+            if not self._undo_stack:
+                return False
+            self._redo_stack.append(copy.deepcopy(self._doc.blocks))
+            snapshot = self._undo_stack.pop()
+            self.beginResetModel()
+            self._doc.blocks[:] = snapshot
+            self._rebuild_display_rows()
+            self.endResetModel()
+            self.document_modified.emit()
+            return True
+
+        def redo(self) -> bool:
+            if not self._redo_stack:
+                return False
+            self._undo_stack.append(copy.deepcopy(self._doc.blocks))
+            snapshot = self._redo_stack.pop()
+            self.beginResetModel()
+            self._doc.blocks[:] = snapshot
+            self._rebuild_display_rows()
+            self.endResetModel()
+            self.document_modified.emit()
+            return True
 
         # ------------------------------------------------------------------
         # Playback highlight
@@ -534,6 +575,7 @@ if _QT_AVAILABLE:
         def dropMimeData(self, data, action, row, column, parent):
             if not data.hasFormat("application/x-macroblock-rows"):
                 return False
+            self._push_undo()
             raw = bytes(data.data("application/x-macroblock-rows")).decode()
             flat_indices: List[int] = []
             for part in raw.split(","):
@@ -588,6 +630,7 @@ if _QT_AVAILABLE:
             row_obj = self._display_rows[index.row()]
             col = index.column()
             blocks = self._doc.blocks
+            self._push_undo()
 
             try:
                 if isinstance(row_obj, GroupHeaderRow):
@@ -641,6 +684,7 @@ if _QT_AVAILABLE:
 
         def delete_rows(self, display_row_indices: list) -> None:
             """Delete blocks corresponding to the given display row indices."""
+            self._push_undo()
             flat_to_delete: set = set()
             for dr_idx in display_row_indices:
                 row_obj = self._display_rows[dr_idx]
@@ -703,6 +747,7 @@ if _QT_AVAILABLE:
 
         def insert_blocks_at_flat(self, flat_index: int, blocks: list) -> None:
             """Insert a list of blocks after *flat_index* (-1 = append at end)."""
+            self._push_undo()
             if flat_index == -1 or flat_index >= len(self._doc.blocks):
                 insert_at = len(self._doc.blocks)
             else:
@@ -715,6 +760,7 @@ if _QT_AVAILABLE:
 
         def insert_block(self, after_display_row: int, block: ActionBlock) -> None:
             """Insert block after the given display row (-1 = prepend)."""
+            self._push_undo()
             if after_display_row == -1:
                 flat_insert = 0
             else:
@@ -751,6 +797,7 @@ if _QT_AVAILABLE:
 
         def move_rows_up(self, display_row_indices: list) -> None:
             """Move selected display rows up by one position in flat block list."""
+            self._push_undo()
             if not display_row_indices:
                 return
             min_dr = min(display_row_indices)
@@ -786,6 +833,7 @@ if _QT_AVAILABLE:
 
         def move_rows_down(self, display_row_indices: list) -> None:
             """Move selected display rows down by one position in flat block list."""
+            self._push_undo()
             if not display_row_indices:
                 return
             max_dr = max(display_row_indices)
@@ -820,6 +868,7 @@ if _QT_AVAILABLE:
 
         def wrap_in_loop(self, flat_indices: list) -> None:
             """Insert a LoopStart before and LoopEnd after the given flat indices."""
+            self._push_undo()
             if not flat_indices:
                 return
             lo = min(flat_indices)
@@ -827,6 +876,24 @@ if _QT_AVAILABLE:
             self.beginResetModel()
             self._doc.blocks.insert(hi + 1, LoopEndBlock())
             self._doc.blocks.insert(lo, LoopStartBlock(repeat=2))
+            self._rebuild_display_rows()
+            self.endResetModel()
+            self.document_modified.emit()
+
+        def duplicate_rows(self, display_row_indices: list) -> None:
+            """Duplicate the blocks at the given display row indices, inserting copies after."""
+            if not display_row_indices:
+                return
+            self._push_undo()
+            flat_indices: list[int] = []
+            for dr_idx in display_row_indices:
+                flat_indices.extend(self._display_row_to_flat_indices(dr_idx))
+            if not flat_indices:
+                return
+            insert_at = max(flat_indices) + 1
+            dupes = [copy.deepcopy(self._doc.blocks[i]) for i in sorted(set(flat_indices))]
+            self.beginResetModel()
+            self._doc.blocks[insert_at:insert_at] = dupes
             self._rebuild_display_rows()
             self.endResetModel()
             self.document_modified.emit()

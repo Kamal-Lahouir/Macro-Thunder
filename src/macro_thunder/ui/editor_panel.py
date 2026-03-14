@@ -2,10 +2,12 @@
 from __future__ import annotations
 
 from PyQt6.QtWidgets import (
-    QFrame, QVBoxLayout,
+    QFrame, QVBoxLayout, QHBoxLayout,
     QTableView, QAbstractItemView, QWidget, QMenu, QHeaderView, QProgressBar,
+    QLineEdit, QPushButton, QLabel,
 )
 from PyQt6.QtCore import pyqtSignal, Qt
+from PyQt6.QtGui import QKeySequence, QShortcut
 
 from macro_thunder.models.view_model import (
     BlockTableModel, BlockRow, GroupHeaderRow, GroupChildRow,
@@ -75,6 +77,10 @@ class EditorPanel(QFrame):
         self._progress_bar.setFixedHeight(18)
         self._progress_bar.hide()
 
+        # ── Search bar ────────────────────────────────────────────────────
+        self._search_bar = self._build_search_bar()
+
+        layout.addWidget(self._search_bar)
         layout.addWidget(self._table, stretch=1)
         layout.addWidget(self._detail_container)
         layout.addWidget(self._progress_bar)
@@ -297,10 +303,13 @@ class EditorPanel(QFrame):
                 label = "Collapse group" if row_obj.expanded else "Expand group"
                 toggle_action = menu.addAction(label)
                 menu.addSeparator()
+        dup_action = menu.addAction("Duplicate")
         wrap_action = menu.addAction("Wrap selection in Loop")
         action = menu.exec(self._table.viewport().mapToGlobal(pos))
         if action == toggle_action and toggle_action is not None:
             self._on_toggle_group(index.row())
+        elif action == dup_action:
+            self.duplicate_selected()
         elif action == wrap_action:
             self._wrap_selection_in_loop()
 
@@ -359,3 +368,129 @@ class EditorPanel(QFrame):
 
     def _update_button_state(self) -> None:
         pass  # buttons now live in the ribbon
+
+    # ── Public undo/redo/duplicate ────────────────────────────────────────
+
+    def undo(self) -> None:
+        if self._model is not None:
+            self._model.undo()
+
+    def redo(self) -> None:
+        if self._model is not None:
+            self._model.redo()
+
+    def duplicate_selected(self) -> None:
+        if self._model is None:
+            return
+        rows = self._selected_display_rows()
+        if rows:
+            self._model.duplicate_rows(rows)
+
+    # ── Search bar ────────────────────────────────────────────────────────
+
+    def _build_search_bar(self) -> QWidget:
+        bar = QWidget()
+        bar.setFixedHeight(32)
+        hl = QHBoxLayout(bar)
+        hl.setContentsMargins(4, 2, 4, 2)
+        hl.setSpacing(4)
+
+        self._search_input = QLineEdit()
+        self._search_input.setPlaceholderText("Search by type or value… (Esc to close)")
+        self._search_input.setFixedHeight(24)
+        self._search_input.textChanged.connect(self._on_search_changed)
+        self._search_input.returnPressed.connect(self._search_next)
+
+        self._search_match_label = QLabel("")
+        self._search_match_label.setStyleSheet("color:#64748b;font-size:11px;background:transparent;")
+        self._search_match_label.setFixedWidth(80)
+
+        btn_prev = QPushButton("▲  Prev")
+        btn_prev.setFixedHeight(24)
+        btn_prev.setMinimumWidth(60)
+        btn_prev.setToolTip("Previous match")
+        btn_prev.clicked.connect(self._search_prev)
+
+        btn_next = QPushButton("▼  Next")
+        btn_next.setFixedHeight(24)
+        btn_next.setMinimumWidth(60)
+        btn_next.setToolTip("Next match")
+        btn_next.clicked.connect(self._search_next)
+
+        btn_close = QPushButton("✕  Close")
+        btn_close.setFixedHeight(24)
+        btn_close.setMinimumWidth(64)
+        btn_close.setToolTip("Close search (Esc)")
+        btn_close.clicked.connect(self._hide_search)
+
+        hl.addWidget(self._search_input, stretch=1)
+        hl.addWidget(self._search_match_label)
+        hl.addWidget(btn_prev)
+        hl.addWidget(btn_next)
+        hl.addWidget(btn_close)
+
+        bar.hide()
+
+        # Escape key inside search input closes bar
+        esc_sc = QShortcut(QKeySequence("Escape"), bar)
+        esc_sc.setContext(Qt.ShortcutContext.WidgetWithChildrenShortcut)
+        esc_sc.activated.connect(self._hide_search)
+
+        self._search_matches: list[int] = []   # display row indices
+        self._search_match_pos: int = -1
+        return bar
+
+    def _show_search(self) -> None:
+        self._search_bar.show()
+        self._search_input.setFocus()
+        self._search_input.selectAll()
+
+    def _hide_search(self) -> None:
+        self._search_bar.hide()
+        self._table.setFocus()
+
+    def _on_search_changed(self, text: str) -> None:
+        self._search_matches = []
+        self._search_match_pos = -1
+        if not text or self._model is None:
+            self._search_match_label.setText("")
+            return
+        query = text.lower()
+        for dr_idx in range(self._model.rowCount()):
+            type_val = self._model.data(self._model.index(dr_idx, 1)) or ""
+            value_val = self._model.data(self._model.index(dr_idx, 2)) or ""
+            if query in type_val.lower() or query in value_val.lower():
+                self._search_matches.append(dr_idx)
+        count = len(self._search_matches)
+        if count:
+            self._search_match_pos = 0
+            self._jump_to_match(0)
+        self._update_match_label()
+
+    def _search_next(self) -> None:
+        if not self._search_matches:
+            return
+        self._search_match_pos = (self._search_match_pos + 1) % len(self._search_matches)
+        self._jump_to_match(self._search_match_pos)
+        self._update_match_label()
+
+    def _search_prev(self) -> None:
+        if not self._search_matches:
+            return
+        self._search_match_pos = (self._search_match_pos - 1) % len(self._search_matches)
+        self._jump_to_match(self._search_match_pos)
+        self._update_match_label()
+
+    def _jump_to_match(self, pos: int) -> None:
+        if self._model is None or pos < 0 or pos >= len(self._search_matches):
+            return
+        dr_idx = self._search_matches[pos]
+        self._table.selectRow(dr_idx)
+        self._table.scrollTo(self._model.index(dr_idx, 0))
+
+    def _update_match_label(self) -> None:
+        count = len(self._search_matches)
+        if count == 0:
+            self._search_match_label.setText("No match")
+        else:
+            self._search_match_label.setText(f"{self._search_match_pos + 1} / {count}")

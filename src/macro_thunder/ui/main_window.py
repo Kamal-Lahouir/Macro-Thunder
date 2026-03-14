@@ -110,6 +110,21 @@ class MainWindow(QMainWindow):
         open_action.triggered.connect(self._open_macro)
         self.addAction(open_action)
 
+        undo_action = QAction(self)
+        undo_action.setShortcut("Ctrl+Z")
+        undo_action.triggered.connect(self._editor_panel.undo)
+        self.addAction(undo_action)
+
+        redo_action = QAction(self)
+        redo_action.setShortcut("Ctrl+Y")
+        redo_action.triggered.connect(self._editor_panel.redo)
+        self.addAction(redo_action)
+
+        find_action = QAction(self)
+        find_action.setShortcut("Ctrl+F")
+        find_action.triggered.connect(self._editor_panel._show_search)
+        self.addAction(find_action)
+
         self.menuBar().hide()
 
         # Services
@@ -192,6 +207,9 @@ class MainWindow(QMainWindow):
         self._toolbar_widget.move_down_requested.connect(self._editor_panel.move_down)
         self._toolbar_widget.delete_requested.connect(self._editor_panel.delete_selected)
         self._toolbar_widget.add_block_requested.connect(self._editor_panel.add_block)
+        self._toolbar_widget.undo_requested.connect(self._editor_panel.undo)
+        self._toolbar_widget.redo_requested.connect(self._editor_panel.redo)
+        self._toolbar_widget.duplicate_requested.connect(self._editor_panel.duplicate_selected)
 
         # Connect hotkey signals
         self._hotkeys.start_record.connect(self._start_record)

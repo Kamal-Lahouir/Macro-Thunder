@@ -24,6 +24,9 @@ class RibbonBar(QWidget):
     move_down_requested   = pyqtSignal()
     delete_requested      = pyqtSignal()
     add_block_requested   = pyqtSignal()
+    undo_requested        = pyqtSignal()
+    redo_requested        = pyqtSignal()
+    duplicate_requested   = pyqtSignal()
     settings_requested    = pyqtSignal()
     theme_toggled         = pyqtSignal(bool)          # True = dark, False = light
 
@@ -204,14 +207,33 @@ class RibbonBar(QWidget):
         btn_add.setToolTip("Insert a new block after selection")
         btn_add.clicked.connect(self.add_block_requested)
 
+        btn_dup = QPushButton("⎘  Duplicate")
+        btn_dup.setFixedHeight(32)
+        btn_dup.setToolTip("Duplicate selected block(s)")
+        btn_dup.clicked.connect(self.duplicate_requested)
+
+        btn_undo = QPushButton("↩  Undo")
+        btn_undo.setFixedHeight(32)
+        btn_undo.setToolTip("Undo last edit (Ctrl+Z)")
+        btn_undo.clicked.connect(self.undo_requested)
+
+        btn_redo = QPushButton("↪  Redo")
+        btn_redo.setFixedHeight(32)
+        btn_redo.setToolTip("Redo (Ctrl+Y)")
+        btn_redo.clicked.connect(self.redo_requested)
+
         hl.addWidget(btn_edit)
         hl.addWidget(_vsep())
         hl.addWidget(btn_up)
         hl.addWidget(btn_down)
         hl.addWidget(_vsep())
         hl.addWidget(btn_delete)
+        hl.addWidget(btn_dup)
         hl.addWidget(_vsep())
         hl.addWidget(btn_add)
+        hl.addWidget(_vsep())
+        hl.addWidget(btn_undo)
+        hl.addWidget(btn_redo)
         hl.addStretch()
         return w
 
@@ -270,6 +292,25 @@ class RibbonBar(QWidget):
         self._chk_infinite.setToolTip("Loop infinitely until Stop is pressed")
         self._chk_infinite.toggled.connect(lambda on: self._spin_repeat.setEnabled(not on))
 
+        # Speed preset buttons
+        btn_half = QPushButton("0.5×")
+        btn_half.setFixedHeight(28)
+        btn_half.setMinimumWidth(52)
+        btn_half.setToolTip("Set speed to 0.5×")
+        btn_half.clicked.connect(lambda: self._set_speed(0.5))
+
+        btn_1x = QPushButton("1×")
+        btn_1x.setFixedHeight(28)
+        btn_1x.setMinimumWidth(44)
+        btn_1x.setToolTip("Set speed to 1×")
+        btn_1x.clicked.connect(lambda: self._set_speed(1.0))
+
+        btn_2x = QPushButton("2×")
+        btn_2x.setFixedHeight(28)
+        btn_2x.setMinimumWidth(44)
+        btn_2x.setToolTip("Set speed to 2×")
+        btn_2x.clicked.connect(lambda: self._set_speed(2.0))
+
         hl.addWidget(self.btn_play)
         hl.addWidget(_vsep())
         hl.addWidget(self.btn_stop_play)
@@ -277,12 +318,18 @@ class RibbonBar(QWidget):
         hl.addWidget(speed_lbl)
         hl.addWidget(self._speed_slider)
         hl.addWidget(self._speed_spin)
+        hl.addWidget(btn_half)
+        hl.addWidget(btn_1x)
+        hl.addWidget(btn_2x)
         hl.addWidget(_vsep())
         hl.addWidget(rep_lbl)
         hl.addWidget(self._spin_repeat)
         hl.addWidget(self._chk_infinite)
         hl.addStretch()
         return w
+
+    def _set_speed(self, speed: float) -> None:
+        self._speed_spin.setValue(speed)
 
     # ── Theme toggle ──────────────────────────────────────────────────────
 
