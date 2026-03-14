@@ -139,7 +139,7 @@ class LibraryPanel(QFrame):
         mid_layout.setSpacing(6)
 
         # New Macro button
-        self._btn_new = QPushButton("＋  New Macro")
+        self._btn_new = QPushButton("New Macro")
         self._btn_new.setProperty("role", "new_macro")
         self._btn_new.setFixedHeight(32)
         self._btn_new.clicked.connect(self._on_new_macro)
@@ -180,7 +180,7 @@ class LibraryPanel(QFrame):
         self._bottom.setObjectName("LibraryBottom")
         bot_layout = QVBoxLayout(self._bottom)
         bot_layout.setContentsMargins(12, 10, 12, 12)
-        save_btn = QPushButton("💾  Save Current Macro")
+        save_btn = QPushButton("Save Current Macro")
         save_btn.setProperty("role", "save")
         save_btn.setFixedHeight(34)
         save_btn.clicked.connect(self.save_requested.emit)

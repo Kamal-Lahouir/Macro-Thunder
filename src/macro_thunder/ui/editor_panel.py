@@ -405,19 +405,19 @@ class EditorPanel(QFrame):
         self._search_match_label.setStyleSheet("color:#64748b;font-size:11px;background:transparent;")
         self._search_match_label.setFixedWidth(80)
 
-        btn_prev = QPushButton("▲  Prev")
+        btn_prev = QPushButton("Prev")
         btn_prev.setFixedHeight(24)
         btn_prev.setMinimumWidth(60)
         btn_prev.setToolTip("Previous match")
         btn_prev.clicked.connect(self._search_prev)
 
-        btn_next = QPushButton("▼  Next")
+        btn_next = QPushButton("Next")
         btn_next.setFixedHeight(24)
         btn_next.setMinimumWidth(60)
         btn_next.setToolTip("Next match")
         btn_next.clicked.connect(self._search_next)
 
-        btn_close = QPushButton("✕  Close")
+        btn_close = QPushButton("Close")
         btn_close.setFixedHeight(24)
         btn_close.setMinimumWidth(64)
         btn_close.setToolTip("Close search (Esc)")
